@@ -122,7 +122,9 @@ npx next typegen   # regenerate route types after adding routes
 | 7 | Opening trainer: position tree, ranked weak spots, FSRS drills, explorer, opening-only analysis | ✅ Done ("Add the opening trainer" commit) |
 | 8 | Replay mode: turning-point finder, limited-strength opponent engine, take-back/resign, post-game analysis | ✅ Done ("Add replay mode..." commit) |
 | 9 | Progress dashboard: weekly trends, headline numbers with period change, weaknesses by phase, clock and opening | ✅ Done ("Add the progress dashboard" commit) |
-| 10 | **Polish and ship** | ⏭ Next |
+| 10 | Polish and ship: backup export/restore/delete, About and credits, error/404/storage states, icon, social image, landing demo, README, mobile header fix | ✅ Done ("Polish and ship" commit) |
+
+**All 10 phases are complete.** Possible next steps are listed under "Open notes".
 
 ### Phase 4: classification and explanations (done)
 
@@ -321,6 +323,33 @@ The spec's "wrong move = Again" was read as a failed attempt, since a retry is a
 
 **Page** (`/progress`): one filter row (date range 4w / 12w / all, speed, account) scopes everything. Stat tiles show change against the previous equal-length period, with an arrow and a good/bad color. Puzzle stats aren't filtered by speed.
 
+### Phase 10: polish and ship (done)
+
+**Backup** (`lib/db/backup.ts`, UI in `components/settings/DataPanel.tsx` on `/about`):
+- Export snapshots every table to JSON, with `format` and the schema `version`.
+- Restore **replaces** everything in one transaction. Merging would collide auto-numbered review ids.
+- `reviveCards` turns FSRS `due` and `last_review` back into Dates.
+- Backups from a newer schema are rejected.
+- Delete all clears every table. Restore and delete ask first with `confirm()`.
+- **Testing:** never click Restore or Delete in the in-app browser, which holds the owner's data. Test Export by intercepting `URL.createObjectURL`, and test Restore with an invalid file.
+
+**Pages and states:**
+- `app/about/page.tsx`: how it works, your data, and credits with licenses checked against each package.
+- `app/error.tsx`: in Next 16 the props are `error: unknown` and `retry()`.
+- `app/not-found.tsx`: the custom 404.
+- `components/layout/StorageWarning.tsx`: a banner if IndexedDB can't open, as in some private modes.
+
+**Branding and metadata:**
+- `app/icon.svg` is the Lucide knight on violet; the default `favicon.ico` was removed.
+- `app/opengraph-image.tsx` uses ImageResponse. Satori shrinks flex items, so chips need `display: flex` and `flexShrink: 0`.
+- `metadataBase` comes from `VERCEL_PROJECT_PRODUCTION_URL`, falling back to localhost.
+
+**Landing:** feature cards link to their pages, plus a demo link to `/u/lichess/penguingim1`.
+
+**Header:** on phones the logo text is hidden and links get `px-2`. Three links had overflowed 375px since Phase 9.
+
+**Dropped from the plan:** the "quick vs deep analysis toggle". It would break Phase 3's one-depth rule that keeps evals, judgements and progress stats comparable, and would force re-analysis because completion is keyed on depth.
+
 ### Later phases (design already agreed)
 
 - **5. Puzzle generator** (done, see above):
@@ -352,6 +381,9 @@ The spec's "wrong move = Again" was read as a failed attempt, since a retry is a
   - A quick vs deep analysis toggle, README with an architecture diagram, social preview image, a demo username.
 
 ## Open notes
+
+- **No LICENSE file yet.** The site serves GPL-3.0 Stockfish files (unmodified, with their license and a source link). The move-judgement and accuracy logic is ported from Lichess (AGPL-3.0). The owner should pick a license; AGPL-3.0 is the conservative choice given the port.
+- **Vercel isn't connected yet.** The repo is on GitHub at `kaiwicke07/chess-ai`. A fresh-clone production build was verified to restore and serve the engine.
 
 - The name "chess.ai" is a placeholder (it no longer uses AI). It's defined only in `lib/site.ts`.
 - Opening names differ by platform: Lichess gives "Sicilian Defense: Najdorf Variation", Chess.com's slug "Sicilian Defense Canal Attack". Normalize them (for example by ECO) before grouping in Phase 9.

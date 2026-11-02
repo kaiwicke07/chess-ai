@@ -8,44 +8,55 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
+import Link from "next/link"
+
 import { RecentAccounts } from "@/components/games/RecentAccounts"
 import { UsernameForm } from "@/components/games/UsernameForm"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { site } from "@/lib/site"
 
-const FEATURES: { icon: LucideIcon; title: string; body: string }[] = [
+const FEATURES: { icon: LucideIcon; title: string; body: string; href: string }[] = [
   {
     icon: Puzzle,
     title: "Puzzles from your blunders",
     body: "Positions where you went wrong, kept only when Stockfish finds one clearly best move.",
+    href: "/puzzles",
   },
   {
     icon: CalendarSync,
     title: "Spaced repetition",
     body: "FSRS scheduling brings missed puzzles back sooner and spaces out the ones you know.",
+    href: "/puzzles",
   },
   {
     icon: GitBranch,
     title: "Opening trainer",
     body: "A tree of your own openings that shows where you leave the good moves, then drills the fix.",
+    href: "/openings",
   },
   {
     icon: Swords,
     title: "Replay critical positions",
     body: "Restart a lost game from its turning point and play it out against Stockfish.",
+    href: "/about#how",
   },
   {
     icon: TrendingUp,
     title: "Progress over weeks",
     body: "Blunder rate, puzzle accuracy, and weak spots by opening, phase and time pressure.",
+    href: "/progress",
   },
   {
     icon: MessageSquareText,
     title: "Explanations from engine facts",
     body: "Short notes like “This hangs your knight to Nxe5”, built from Stockfish's lines.",
+    href: "/about#how",
   },
 ]
+
+/** A public account to try the app with, for visitors without their own */
+const DEMO = { platform: "lichess", username: "penguingim1", label: "GM Andrew Tang on Lichess" }
 
 export default function Home() {
   return (
@@ -58,6 +69,12 @@ export default function Home() {
           </h1>
           <p className="max-w-xl text-lg text-pretty text-muted-foreground">{site.description}</p>
           <UsernameForm />
+          <p className="-mt-2 text-sm text-muted-foreground">
+            No account handy?{" "}
+            <Link href={`/u/${DEMO.platform}/${DEMO.username}`} className="text-primary underline-offset-4 hover:underline">
+              Try it with {DEMO.label}
+            </Link>
+          </p>
           <RecentAccounts />
         </div>
         <ExampleReview />
@@ -68,14 +85,16 @@ export default function Home() {
           What it trains
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map(({ icon: Icon, title, body }) => (
-            <Card key={title}>
-              <CardHeader>
-                <Icon className="mb-2 size-5 text-primary" aria-hidden />
-                <CardTitle>{title}</CardTitle>
-                <CardDescription>{body}</CardDescription>
-              </CardHeader>
-            </Card>
+          {FEATURES.map(({ icon: Icon, title, body, href }) => (
+            <Link key={title} href={href} className="rounded-xl focus-visible:outline-2 focus-visible:outline-ring">
+              <Card className="h-full transition-colors hover:bg-muted/40">
+                <CardHeader>
+                  <Icon className="mb-2 size-5 text-primary" aria-hidden />
+                  <CardTitle>{title}</CardTitle>
+                  <CardDescription>{body}</CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
           ))}
         </div>
       </section>
