@@ -1,6 +1,6 @@
 "use client"
 
-import { Chessboard } from "react-chessboard"
+import { Chessboard, type Arrow } from "react-chessboard"
 
 import type { Position } from "@/lib/chess/positions"
 import type { Color } from "@/lib/types"
@@ -9,7 +9,15 @@ import type { Color } from "@/lib/types"
 const LAST_MOVE = { backgroundColor: "color-mix(in oklch, var(--primary) 35%, transparent)" }
 
 /** Read-only board showing one position, with the last move highlighted. */
-export function ReviewBoard({ position, orientation }: { position: Position; orientation: Color }) {
+export function ReviewBoard({
+  position,
+  orientation,
+  arrows = [],
+}: {
+  position: Position
+  orientation: Color
+  arrows?: Arrow[]
+}) {
   const squareStyles = position.lastMove
     ? { [position.lastMove.from]: LAST_MOVE, [position.lastMove.to]: LAST_MOVE }
     : {}
@@ -23,6 +31,7 @@ export function ReviewBoard({ position, orientation }: { position: Position; ori
           boardOrientation: orientation,
           allowDragging: false,
           allowDrawingArrows: true,
+          arrows,
           animationDurationInMs: 150,
           squareStyles,
           darkSquareStyle: { backgroundColor: "var(--board-dark)" },

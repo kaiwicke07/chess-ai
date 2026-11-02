@@ -5,7 +5,7 @@ import type { Color, Game } from "@/lib/types"
 export interface Position {
   fen: string
   /** The move that produced this position; null for the starting position */
-  lastMove: { san: string; from: string; to: string; color: Color } | null
+  lastMove: { san: string; uci: string; from: string; to: string; color: Color } | null
 }
 
 /**
@@ -26,7 +26,14 @@ export function replayMoves(moves: string[]): Position[] {
     }
     positions.push({
       fen: move.after,
-      lastMove: { san: move.san, from: move.from, to: move.to, color: move.color === "w" ? "white" : "black" },
+      lastMove: {
+        san: move.san,
+        // chess.js's long algebraic matches the engine's UCI format: e2e4, e7e8q
+        uci: move.lan,
+        from: move.from,
+        to: move.to,
+        color: move.color === "w" ? "white" : "black",
+      },
     })
   }
   return positions

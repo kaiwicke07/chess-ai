@@ -97,7 +97,8 @@ npx next typegen   # regenerate route types after adding routes
 - **Lichess games export:** `clocks` can have one extra trailing entry (trim to the move count). Status `timeout` means the player left (mapped to `abandoned`); `outoftime` means they flagged. curl's default User-Agent gets 404 from `/api/games/user`.
 - **Browser fetch can't set `User-Agent`,** and custom headers trigger a CORS preflight. Send no custom headers to Chess.com.
 - **React Strict Mode runs effects twice in dev.** The queue marks a game current as soon as it's dequeued so it isn't analyzed twice. Keep request dedupe in mind for new background work.
-- **In-app Browser pane testing:** while the pane is hidden, `requestAnimationFrame` never fires, so a full page reload won't hydrate and Suspense content isn't revealed. Show the pane (`mcp__ccd_view__show_pane` with `preview`) before testing, or navigate client-side from `/`.
+- **Win % has two variants.** For "the mover's win chance", use `winPercentFor(eval, color)`: black's chance is `100 − white's`. For mover-side display, use `evalFor`. Classification needs uncapped `winningChances`; see Phase 4.
+- **In-app Browser pane testing:** the pane hides itself again between turns. While the pane is hidden, `requestAnimationFrame` never fires, so a full page reload won't hydrate and Suspense content isn't revealed. Show the pane (`mcp__ccd_view__show_pane` with `preview`) before testing, or navigate client-side from `/`.
 - **PowerShell `ConvertTo-Json`/`Set-Content`** writes a BOM and reformats JSON, which broke `package.json` once. Edit JSON with a Node one-liner instead.
 - **Measured engine speed (depth 14):** about 115 ms per position in Node and about 200 ms in the browser, so 10–30 s per game. A 158-ply game took about 35 s.
 
@@ -109,15 +110,34 @@ npx next typegen   # regenerate route types after adding routes
 | 1 | Fetch and sync games: both platforms, clocks, openings, new-games-only sync, game list | ✅ Done (`4ee2c92`) |
 | 2 | Review board: step through moves, keyboard (←→↑↓, Home/End, F flips), move list, clocks | ✅ Done (`b1b3210`) |
 | 3 | Stockfish analysis: worker wrapper, background queue, eval bar and graph, engine line, per-position cache | ✅ Done (`c9bea62`) |
-| 4 | **Classification and explanations** | ⏭ Next, spec below |
-| 5 | Puzzle generator and solver | Planned |
+| 4 | Classification and explanations: Lichess-faithful judgements and accuracy, arrows, badges, template explanations | ✅ Done ("Flag mistakes..." commit) |
+| 5 | **Puzzle generator and solver** | ⏭ Next |
 | 6 | Spaced repetition (FSRS) | Planned |
 | 7 | Opening trainer | Planned |
 | 8 | Replay mode vs Stockfish | Planned |
 | 9 | Progress dashboard | Planned |
 | 10 | Polish and ship | Planned |
 
-### Phase 4: classification and explanations (next)
+### Phase 4: classification and explanations (done)
+
+**As built:**
+- `lib/analysis/classify.ts`: `judge()` and `assessMoves()` are ports of lila `Advice.scala`.
+- `lib/analysis/accuracy.ts`: `moveAccuracy()` and `gameAccuracy()` are ports of lila `AccuracyPercent.scala`.
+- `lib/explain/facts.ts` and `templates.ts` hold the facts and explanations; `lib/chess/material.ts` the material counting.
+- `components/review/` holds `MoveFeedback`, `AccuracySummary` and `judgementStyles`. Badges are in `MoveList`, dots in `EvalGraph`, arrows via `ReviewBoard`.
+
+**Facts learned while porting:**
+- `winPercent` caps cp at ±1000, and mates count as ±1000 (≈97.5%, not 100). But move *judgements* use **uncapped** `winningChances` (−7.27 → −18.92 is an inaccuracy).
+- Lichess's exported analysis starts after move 1; tests assume a +0.15 start (legacy initial).
+- `tests/classify.test.ts` feeds Lichess's own evals for 3 real games (`tests/fixtures/lichess-analysed.json`) through the port and requires Lichess's exact judgements and accuracy within ±1. Keep this test passing.
+
+**Against our own depth-14 evals:**
+- On 3 real games, accuracy was within 1–5 points of Lichess's server analysis, and every Lichess blunder was flagged by us as a blunder or a mistake.
+- The differences are borderline inaccuracies or a single step in severity, from the shallower, lite engine.
+
+**Explanation wording rule:** the short forms ("hangs the knight on e6 to fxe6", "Bxc6+ would have won a piece") are used only when that single capture equals the net material change. Otherwise the line is shown, so trades aren't misdescribed.
+
+The original spec follows for reference.
 
 **Goal:** flag each move as inaccuracy, mistake or blunder; show per-player accuracy; draw best-move and played-move arrows; write a short explanation built from engine facts. Everything is computed from the evals Phase 3 already caches, with no new engine work.
 

@@ -12,7 +12,7 @@ describe("replayMoves", () => {
       fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
       lastMove: null,
     })
-    expect(positions[3].lastMove).toEqual({ san: "Nf3", from: "g1", to: "f3", color: "white" })
+    expect(positions[3].lastMove).toEqual({ san: "Nf3", uci: "g1f3", from: "g1", to: "f3", color: "white" })
     expect(positions[3].fen).toBe("rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2")
   })
 

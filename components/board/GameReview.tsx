@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useLiveQuery } from "dexie-react-hooks"
 import { ArrowLeft, ExternalLink } from "lucide-react"
+import type { Arrow } from "react-chessboard"
 
 import { BoardControls } from "@/components/board/BoardControls"
 import { EngineLine } from "@/components/board/EngineLine"
@@ -12,7 +13,13 @@ import { EvalGraph } from "@/components/board/EvalGraph"
 import { MoveList } from "@/components/board/MoveList"
 import { PlayerBar } from "@/components/board/PlayerBar"
 import { ReviewBoard } from "@/components/board/ReviewBoard"
+import { AccuracySummary } from "@/components/review/AccuracySummary"
+import { BEST_COLOR, JUDGEMENT_COLORS } from "@/components/review/judgementStyles"
+import { MoveFeedback } from "@/components/review/MoveFeedback"
+import { gameAccuracy } from "@/lib/analysis/accuracy"
+import { assessMoves } from "@/lib/analysis/classify"
 import { clocksAt, replayMoves } from "@/lib/chess/positions"
+import { explainMove } from "@/lib/explain/templates"
 import { db } from "@/lib/db/schema"
 import { useAnalysisQueue } from "@/lib/engine/useAnalysisQueue"
 import { useGameEvals } from "@/lib/engine/useGameEvals"
@@ -38,6 +45,16 @@ function Review({ game }: { game: Game }) {
   const evals = useGameEvals(game.id, positions)
   const queue = useAnalysisQueue()
   const progress = queue.current?.gameId === game.id ? queue.current : null
+
+  // Everything below derives from the evals; moves fill in as analysis runs
+  const assessments = useMemo(
+    () => (evals ? assessMoves(positions, evals) : positions.map(() => null)),
+    [positions, evals],
+  )
+  const accuracy = useMemo(
+    () => (evals?.every(Boolean) ? gameAccuracy(evals.map((entry) => entry!.eval)) : null),
+    [evals],
+  )
 
   const select = (target: number) => setPly(Math.max(0, Math.min(lastPly, target)))
   const flip = () => setOrientation((o) => (o === "white" ? "black" : "white"))
@@ -68,6 +85,24 @@ function Review({ game }: { game: Game }) {
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [lastPly])
+
+  // The move that led to the shown position, its verdict, and arrows for it:
+  // what was played (in the judgement's color) and what Stockfish preferred
+  const move = positions[ply].lastMove
+  const current = assessments[ply]
+  const before = evals?.[ply - 1]
+  const after = evals?.[ply]
+  const explanation =
+    move && current?.judgement && before && after
+      ? explainMove({ fen: positions[ply - 1].fen, uci: move.uci, assessment: current, before, after })
+      : null
+  const arrows: Arrow[] = []
+  if (move && current?.judgement) {
+    arrows.push({ startSquare: move.from, endSquare: move.to, color: JUDGEMENT_COLORS[current.judgement] })
+    if (before?.best && before.best !== move.uci) {
+      arrows.push({ startSquare: before.best.slice(0, 2), endSquare: before.best.slice(2, 4), color: BEST_COLOR })
+    }
+  }
 
   const clocks = clocksAt(game, ply)
   // Nobody is on the move once the game is over
@@ -109,7 +144,7 @@ function Review({ game }: { game: Game }) {
           <div className="flex gap-2">
             <EvalBar evaluation={evals?.[ply]?.eval} orientation={orientation} />
             <div className="min-w-0 flex-1">
-              <ReviewBoard position={positions[ply]} orientation={orientation} />
+              <ReviewBoard position={positions[ply]} orientation={orientation} arrows={arrows} />
             </div>
           </div>
           {bar(orientation)}
@@ -133,11 +168,14 @@ function Review({ game }: { game: Game }) {
             </a>
           </div>
 
+          {accuracy && <AccuracySummary game={game} accuracy={accuracy} assessments={assessments} />}
           <EngineLine fen={positions[ply].fen} entry={evals?.[ply]} progress={progress} error={queue.error} />
-          {evals && <EvalGraph evals={evals} ply={ply} onSelect={select} />}
+          {move && current && <MoveFeedback san={move.san} assessment={current} explanation={explanation} />}
+          {evals && <EvalGraph evals={evals} assessments={assessments} ply={ply} onSelect={select} />}
 
           <MoveList
             positions={positions}
+            assessments={assessments}
             ply={ply}
             onSelect={select}
             footer={

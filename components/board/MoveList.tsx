@@ -2,19 +2,24 @@
 
 import { useEffect, useRef } from "react"
 
+import { JUDGEMENT_TEXT } from "@/components/review/judgementStyles"
+import { JUDGEMENT_GLYPHS, JUDGEMENT_LABELS, type MoveAssessment } from "@/lib/analysis/classify"
 import type { Position } from "@/lib/chess/positions"
 
 /**
- * Moves in two columns. `ply` is the number of plies played in the shown
- * position, so the highlighted move is positions[ply].
+ * Moves in two columns, with ?!, ? and ?? on flagged moves. `ply` is the
+ * number of plies played in the shown position, so the highlighted move is
+ * positions[ply]; `assessments` is aligned the same way.
  */
 export function MoveList({
   positions,
+  assessments,
   ply,
   onSelect,
   footer,
 }: {
   positions: Position[]
+  assessments: (MoveAssessment | null)[]
   ply: number
   onSelect: (ply: number) => void
   footer?: React.ReactNode
@@ -46,15 +51,18 @@ export function MoveList({
   const cell = (index: number | undefined) => {
     if (index === undefined) return <span />
     const active = index === ply
+    const judgement = assessments[index]?.judgement
     return (
       <button
         ref={active ? activeRef : undefined}
         type="button"
         onClick={() => onSelect(index)}
         aria-current={active ? "step" : undefined}
-        className={`rounded px-2 py-0.5 text-left font-mono text-sm ${active ? "bg-primary/25 text-foreground" : "hover:bg-muted"}`}
+        aria-label={judgement ? `${positions[index].lastMove?.san}, ${JUDGEMENT_LABELS[judgement]}` : undefined}
+        className={`rounded px-2 py-0.5 text-left font-mono text-sm ${active ? "bg-primary/25 text-foreground" : "hover:bg-muted"} ${judgement ? JUDGEMENT_TEXT[judgement] : ""}`}
       >
         {positions[index].lastMove?.san}
+        {judgement && <span className="font-semibold">{JUDGEMENT_GLYPHS[judgement]}</span>}
       </button>
     )
   }

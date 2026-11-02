@@ -80,10 +80,13 @@ describe("winPercent", () => {
     expect(winPercent({ kind: "cp", cp: 300 })).toBeCloseTo(75.1, 1)
   })
 
-  it("treats mates and checkmates as certain", () => {
-    expect(winPercent({ kind: "mate", moves: 3 })).toBe(100)
-    expect(winPercent({ kind: "mate", moves: -1 })).toBe(0)
-    expect(winPercent({ kind: "checkmate", winner: "black" })).toBe(0)
+  it("scores mates like Lichess, as ±1000 cp (about 97.5%)", () => {
+    const ceiling = winPercent({ kind: "cp", cp: 1000 })
+    expect(ceiling).toBeCloseTo(97.5, 1)
+    expect(winPercent({ kind: "mate", moves: 3 })).toBe(ceiling)
+    expect(winPercent({ kind: "mate", moves: -1 })).toBeCloseTo(100 - ceiling)
+    expect(winPercent({ kind: "checkmate", winner: "black" })).toBeCloseTo(100 - ceiling)
+    expect(winPercent({ kind: "cp", cp: 5000 })).toBe(ceiling)
   })
 
   it("formats evals", () => {
