@@ -1,6 +1,7 @@
+import Link from "next/link"
 import { ExternalLink } from "lucide-react"
 
-import { formatRelative, formatTimeControl, moveCount } from "@/lib/format"
+import { formatRelative, formatTimeControl, moveCount, SPEED_LABELS } from "@/lib/format"
 import { PLATFORM_LABELS } from "@/lib/sources/normalize"
 import type { Game, Result } from "@/lib/types"
 
@@ -10,20 +11,17 @@ const RESULT_STYLES: Record<Result, { label: string; className: string }> = {
   draw: { label: "D", className: "bg-muted text-muted-foreground" },
 }
 
-const SPEED_LABELS: Record<Game["speed"], string> = {
-  bullet: "Bullet",
-  blitz: "Blitz",
-  rapid: "Rapid",
-  classical: "Classical",
-}
-
-/** One row of the game list. */
+/**
+ * One row of the game list. The opponent link stretches over the whole row
+ * (after:inset-0), so the row is clickable without nesting the external link
+ * inside another link, which HTML doesn't allow.
+ */
 export function GameCard({ game }: { game: Game }) {
   const opponent = game.userColor === "white" ? game.black : game.white
   const result = RESULT_STYLES[game.result]
 
   return (
-    <li className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-4 py-3 sm:grid-cols-[auto_minmax(0,1fr)_minmax(0,1.2fr)_auto]">
+    <li className="relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-4 py-3 transition-colors hover:bg-muted/50 sm:grid-cols-[auto_minmax(0,1fr)_minmax(0,1.2fr)_auto]">
       <span
         className={`flex size-7 items-center justify-center rounded-md text-xs font-semibold ${result.className}`}
         aria-label={game.result}
@@ -37,12 +35,15 @@ export function GameCard({ game }: { game: Game }) {
             className={`size-2.5 shrink-0 rounded-full ${game.userColor === "white" ? "bg-white" : "bg-neutral-950 ring-1 ring-neutral-300"}`}
             title={`You played ${game.userColor}`}
           />
-          <span className="truncate">
+          <Link
+            href={`/review/${game.platform}/${game.sourceId}`}
+            className="truncate after:absolute after:inset-0 focus-visible:outline-none after:focus-visible:rounded-md after:focus-visible:ring-2 after:focus-visible:ring-ring"
+          >
             vs {opponent.name}
             {opponent.rating !== null && (
               <span className="font-normal text-muted-foreground"> ({opponent.rating})</span>
             )}
-          </span>
+          </Link>
         </span>
         <span className="truncate text-xs text-muted-foreground sm:hidden">
           {game.opening.name ?? "Unknown opening"}
@@ -61,11 +62,12 @@ export function GameCard({ game }: { game: Game }) {
           </span>
           <span>{formatRelative(game.playedAt)}</span>
         </span>
+        {/* relative z-10 lifts it above the stretched row link */}
         <a
           href={game.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-md p-1 hover:bg-muted hover:text-foreground"
+          className="relative z-10 rounded-md p-1 hover:bg-muted hover:text-foreground"
           aria-label={`Open game vs ${opponent.name} on ${PLATFORM_LABELS[game.platform]}`}
         >
           <ExternalLink className="size-4" />
