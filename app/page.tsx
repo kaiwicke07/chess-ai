@@ -8,6 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
+import { RecentAccounts } from "@/components/games/RecentAccounts"
 import { UsernameForm } from "@/components/games/UsernameForm"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -57,6 +58,7 @@ export default function Home() {
           </h1>
           <p className="max-w-xl text-lg text-pretty text-muted-foreground">{site.description}</p>
           <UsernameForm />
+          <RecentAccounts />
         </div>
         <ExampleReview />
       </section>
