@@ -20,9 +20,13 @@ export function moveAccuracy(winBefore: number, winAfter: number): number {
  * - a mean weighted by volatility (the spread of win % in a window around the
  *   move), so moves in sharp positions count more than shuffling in a dead one
  * - a harmonic mean, which punishes a few very bad moves more than a plain mean
- * Returns null for a player with no moves.
+ * Returns null for a player with no moves. `startColor` is who moves first
+ * (black, for a replay that starts on black's move), as in Lichess.
  */
-export function gameAccuracy(evals: Eval[]): { white: number | null; black: number | null } {
+export function gameAccuracy(
+  evals: Eval[],
+  startColor: "white" | "black" = "white",
+): { white: number | null; black: number | null } {
   const wins = evals.map(winPercent)
   const moves = wins.length - 1
   if (moves < 1) return { white: null, black: null }
@@ -37,7 +41,7 @@ export function gameAccuracy(evals: Eval[]): { white: number | null; black: numb
   const byColor: Record<"white" | "black", { accuracy: number; weight: number }[]> = { white: [], black: [] }
   for (let i = 0; i < moves; i++) {
     const [prev, next] = [wins[i], wins[i + 1]]
-    const white = i % 2 === 0
+    const white = (i % 2 === 0) === (startColor === "white")
     // Black's win % is 100 − white's, so its drop is next − prev
     const accuracy = white ? moveAccuracy(prev, next) : moveAccuracy(next, prev)
     byColor[white ? "white" : "black"].push({ accuracy, weight: weights[i] })

@@ -54,6 +54,7 @@ npx next typegen   # regenerate route types after adding routes
   - `/review/[platform]/[sourceId]` is the review board (`components/board/GameReview.tsx`). The game id is `${platform}:${sourceId}`.
   - `/puzzles` is the puzzle trainer (static page; all data comes from Dexie). It's linked from the header nav.
   - `/openings` is the opening trainer (static page). It's linked from the header nav.
+  - `/play/[platform]/[sourceId]` is replay mode against Stockfish. It's linked from the review page.
 - **No server code.** The browser fetches Lichess and Chess.com directly; both send `Access-Control-Allow-Origin: *`. The planned `/api/games` proxy was dropped. Lichess rate-limits per IP, so proxying would pool every visitor's limit, and Lichess also rejects some non-browser User-Agents.
 - **Data model:** see `lib/types.ts`.
   - **`Game`:** SAN moves from the standard start, and `clocks` (ms remaining after each ply, aligned with `moves`, or null). The result is from the user's side. `account` is `platform:lowercased-username`.
@@ -118,8 +119,8 @@ npx next typegen   # regenerate route types after adding routes
 | 5 | Puzzle generator and solver: MultiPV-2 uniqueness, multi-move lines, themes, `/puzzles` solver, links to and from the review | ✅ Done ("Generate puzzles..." commit) |
 | 6 | Spaced repetition: ts-fsrs scheduling, auto-grading, daily queue, persistent review log, header badge | ✅ Done ("Schedule puzzles with spaced repetition" commit) |
 | 7 | Opening trainer: position tree, ranked weak spots, FSRS drills, explorer, opening-only analysis | ✅ Done ("Add the opening trainer" commit) |
-| 8 | **Replay mode vs Stockfish** | ⏭ Next |
-| 9 | Progress dashboard | Planned |
+| 8 | Replay mode: turning-point finder, limited-strength opponent engine, take-back/resign, post-game analysis | ✅ Done ("Add replay mode..." commit) |
+| 9 | **Progress dashboard** | ⏭ Next |
 | 10 | Polish and ship | Planned |
 
 ### Phase 4: classification and explanations (done)
@@ -262,6 +263,30 @@ The spec's "wrong move = Again" was read as a failed attempt, since a retry is a
 - An **"Analyze opening positions"** button evaluates only the missing evals that weak-spot detection needs. It took about 12 s for hikaru's 62 positions.
 
 **Test data note:** the in-app browser also holds the owner's real account (`chesscom:kaithepondgod`). Test drills and puzzles on hikaru or penguingim1, so no cards or reviews get written into the owner's schedule.
+
+### Phase 8: replay mode (done)
+
+**Route:** `/play/[platform]/[sourceId]`, with `#ply=N` for a chosen start. It's linked from the review header: "Replay the turning point" (losses and draws) and "Play from here" (the current ply).
+
+**Turning point** (`lib/replay/criticalPosition.ts`): the position before the user's single largest win-% drop. It's null if no user move dropped ≥10 points; the replay then starts at move 1.
+
+**Opponent** (`lib/engine/opponent.ts`): a **separate** `Engine` instance per match, so background analysis keeps running and strength settings never touch the evals.
+- **New engine calls:** `Engine.setOption()` and `Engine.bestMove(fen, movetime)`. `bestMove` reads the final `bestmove` line, because with limited strength the chosen move differs from the top PV.
+- **Strength settings:** this build exposes `UCI_LimitStrength` plus `UCI_Elo` (1320–3190) and `Skill Level` (0–20).
+- **Presets:** Beginner (Skill 0), about 1400 / 1700 / 2000 / 2400 via UCI_Elo, and Full strength, at 0.3–1 s per move. The labels are approximate, since UCI_Elo is calibrated at a minute per game.
+
+**Match** (`components/replay/ReplayGame.tsx`):
+- The engine moves first if it's on the move.
+- **Take back** returns to the user's previous turn. **Resign** ends the game.
+- Game end comes from `lib/replay/outcome.ts`: checkmate, stalemate, threefold (it replays the whole history), insufficient material, the 50-move rule.
+- The engine's reply is applied from the promise and dropped if the position changed meanwhile.
+
+**After the game:** "Analyze my moves" (`ReplayAnalysis.tsx`) evaluates each replay position through `analysisQueue.evaluate` (cached), then judges the user's moves and gives an accuracy.
+- `gameAccuracy()` now takes `startColor`, as Lichess's does, for replays starting on Black's move.
+- `replayUci()` in `lib/chess/positions.ts` replays UCI moves from any FEN.
+- Replays aren't stored.
+
+**Test tip:** a browser `navigate` to the same path with only a new hash doesn't remount the page. Use `location.reload()`.
 
 ### Later phases (design already agreed)
 

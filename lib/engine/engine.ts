@@ -57,6 +57,38 @@ export class Engine {
     })
   }
 
+  /** Sets a UCI option (e.g. "UCI_Elo"), in order with the other commands. */
+  setOption(name: string, value: string | number | boolean): Promise<void> {
+    return this.enqueue(async () => {
+      this.worker.postMessage(`setoption name ${name} value ${value}`)
+      await this.waitFor("isready", "readyok")
+    })
+  }
+
+  /**
+   * The move the engine chooses to play, from its final "bestmove" line. With
+   * limited strength this can differ from its analysis's top line, which is
+   * the point: it plays like a weaker player instead of reporting the best move.
+   */
+  bestMove(fen: string, movetimeMs: number): Promise<string | null> {
+    return this.enqueue(
+      () =>
+        new Promise<string | null>((resolve, reject) => {
+          if (this.failure) return reject(this.failure)
+          this.onLine = (line) => {
+            if (line === "__error__") return reject(this.failure)
+            if (!line.startsWith("bestmove")) return
+            this.onLine = null
+            const move = line.split(" ")[1]
+            resolve(move && move !== "(none)" ? move : null)
+          }
+          this.worker.postMessage("setoption name MultiPV value 1")
+          this.worker.postMessage(`position fen ${fen}`)
+          this.worker.postMessage(`go movetime ${movetimeMs}`)
+        }),
+    )
+  }
+
   /** Clears the engine's memory of earlier positions; call between unrelated games. */
   newGame(): Promise<void> {
     return this.enqueue(async () => {

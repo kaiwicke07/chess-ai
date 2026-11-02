@@ -2,7 +2,7 @@
 
 A free chess improvement trainer. It pulls your Lichess or Chess.com games, analyzes them with Stockfish in the browser, and turns your mistakes into spaced-repetition puzzles, opening drills and replayable positions. No LLM, no paid services, no accounts: your data stays in your browser.
 
-**Status:** Phase 7 (opening trainer). Features arrive phase by phase.
+**Status:** Phase 8 (replay mode against Stockfish). Features arrive phase by phase.
 
 ## Development
 

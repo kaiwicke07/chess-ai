@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useLiveQuery } from "dexie-react-hooks"
-import { ArrowLeft, ExternalLink } from "lucide-react"
+import { ArrowLeft, ExternalLink, Play, Swords } from "lucide-react"
 import type { Arrow } from "react-chessboard"
 
 import { BoardControls } from "@/components/board/BoardControls"
@@ -16,6 +16,7 @@ import { ReviewBoard } from "@/components/board/ReviewBoard"
 import { AccuracySummary } from "@/components/review/AccuracySummary"
 import { BEST_COLOR, JUDGEMENT_COLORS } from "@/components/review/judgementStyles"
 import { MoveFeedback } from "@/components/review/MoveFeedback"
+import { buttonVariants } from "@/components/ui/button"
 import { gameAccuracy } from "@/lib/analysis/accuracy"
 import { assessMoves } from "@/lib/analysis/classify"
 import { clocksAt, replayMoves } from "@/lib/chess/positions"
@@ -133,19 +134,37 @@ function Review({ game }: { game: Game }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-2">
-        <Link
-          href={`/u/${game.platform}/${username}`}
-          className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" aria-hidden /> All games
-        </Link>
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">vs {opponent.name}</h1>
-          <span className="text-sm text-muted-foreground">
-            {formatOutcome(game)} · {SPEED_LABELS[game.speed]} {formatTimeControl(game.timeControl)} ·{" "}
-            {new Date(game.playedAt).toLocaleDateString(undefined, { dateStyle: "medium" })}
-          </span>
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-2">
+          <Link
+            href={`/u/${game.platform}/${username}`}
+            className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" aria-hidden /> All games
+          </Link>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h1 className="text-2xl font-semibold tracking-tight">vs {opponent.name}</h1>
+            <span className="text-sm text-muted-foreground">
+              {formatOutcome(game)} · {SPEED_LABELS[game.speed]} {formatTimeControl(game.timeControl)} ·{" "}
+              {new Date(game.playedAt).toLocaleDateString(undefined, { dateStyle: "medium" })}
+            </span>
+          </div>
+        </div>
+        {/* Replay against Stockfish: from the shown move, or from where the game turned */}
+        <div className="flex flex-wrap gap-2">
+          {game.result !== "win" && (
+            <Link href={`/play/${game.platform}/${game.sourceId}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+              <Swords aria-hidden /> Replay the turning point
+            </Link>
+          )}
+          {ply < lastPly && (
+            <Link
+              href={`/play/${game.platform}/${game.sourceId}#ply=${ply}`}
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
+            >
+              <Play aria-hidden /> Play from here
+            </Link>
+          )}
         </div>
       </header>
 

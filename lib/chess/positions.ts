@@ -40,6 +40,28 @@ export function replayMoves(moves: string[]): Position[] {
 }
 
 /**
+ * Like replayMoves, but from any position and with UCI moves (as the engine
+ * and the interactive board produce them). Used for replays against Stockfish.
+ */
+export function replayUci(fen: string, uciMoves: string[]): Position[] {
+  const chess = new Chess(fen)
+  const positions: Position[] = [{ fen: chess.fen(), lastMove: null }]
+  for (const uci of uciMoves) {
+    let move
+    try {
+      move = chess.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] })
+    } catch {
+      break
+    }
+    positions.push({
+      fen: move.after,
+      lastMove: { san: move.san, uci: move.lan, from: move.from, to: move.to, color: move.color === "w" ? "white" : "black" },
+    })
+  }
+  return positions
+}
+
+/**
  * Each side's remaining time (ms) in the position after `ply` plies.
  * A side that hasn't moved yet shows the starting time. Null without clock data.
  */

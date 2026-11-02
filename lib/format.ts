@@ -68,6 +68,11 @@ export function formatScore(game: Pick<Game, "result" | "userColor">): string {
   return whiteWon ? "1-0" : "0-1"
 }
 
+/** "1 mistake", "2 mistakes" */
+export function plural(count: number, word: string): string {
+  return `${count} ${word}${count === 1 ? "" : "s"}`
+}
+
 /** Full moves, rounded up: 73 plies → 37 moves */
 export function moveCount(game: Game): number {
   return Math.ceil(game.moves.length / 2)
