@@ -23,6 +23,12 @@ export function SiteHeader() {
             {/* Client component: reads the schedule from IndexedDB */}
             <PuzzlesDueBadge />
           </Link>
+          <Link
+            href="/openings"
+            className="rounded-md px-3 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            Openings
+          </Link>
         </nav>
       </div>
     </header>

@@ -53,6 +53,7 @@ npx next typegen   # regenerate route types after adding routes
   - `/u/[platform]/[username]` is the game list, sync and analysis queue (`components/games/GameLibrary.tsx`).
   - `/review/[platform]/[sourceId]` is the review board (`components/board/GameReview.tsx`). The game id is `${platform}:${sourceId}`.
   - `/puzzles` is the puzzle trainer (static page; all data comes from Dexie). It's linked from the header nav.
+  - `/openings` is the opening trainer (static page). It's linked from the header nav.
 - **No server code.** The browser fetches Lichess and Chess.com directly; both send `Access-Control-Allow-Origin: *`. The planned `/api/games` proxy was dropped. Lichess rate-limits per IP, so proxying would pool every visitor's limit, and Lichess also rejects some non-browser User-Agents.
 - **Data model:** see `lib/types.ts`.
   - **`Game`:** SAN moves from the standard start, and `clocks` (ms remaining after each ply, aligned with `moves`, or null). The result is from the user's side. `account` is `platform:lowercased-username`.
@@ -116,8 +117,8 @@ npx next typegen   # regenerate route types after adding routes
 | 4 | Classification and explanations: Lichess-faithful judgements and accuracy, arrows, badges, template explanations | ✅ Done ("Flag mistakes..." commit) |
 | 5 | Puzzle generator and solver: MultiPV-2 uniqueness, multi-move lines, themes, `/puzzles` solver, links to and from the review | ✅ Done ("Generate puzzles..." commit) |
 | 6 | Spaced repetition: ts-fsrs scheduling, auto-grading, daily queue, persistent review log, header badge | ✅ Done ("Schedule puzzles with spaced repetition" commit) |
-| 7 | **Opening trainer** | ⏭ Next |
-| 8 | Replay mode vs Stockfish | Planned |
+| 7 | Opening trainer: position tree, ranked weak spots, FSRS drills, explorer, opening-only analysis | ✅ Done ("Add the opening trainer" commit) |
+| 8 | **Replay mode vs Stockfish** | ⏭ Next |
 | 9 | Progress dashboard | Planned |
 | 10 | Polish and ship | Planned |
 
@@ -228,6 +229,39 @@ The spec's "wrong move = Again" was read as a failed attempt, since a retry is a
 - The header's `PuzzlesDueBadge` shows today's count.
 
 **`lib/useNow.ts`:** a ticking clock that starts at 0 and is set after mount. Use it rather than `Date.now()` in render; React's purity lint forbids that.
+
+### Phase 7: opening trainer (done)
+
+**The tree** (`lib/openings/buildTree.ts`): `buildTree(games, color)` merges one color's games into positions up to `OPENING_PLIES = 20`.
+- **Keys:** nodes are keyed by `positionKey`, so transpositions merge.
+- **Per node:** games reached (counted once per game), moves with counts and the user's results, and the shortest route (`path`, UCI).
+- **When it's built:** it's derived at view time, never stored. It grows as games are imported and analyzed.
+
+**Weak spots** (`lib/openings/deviations.ts`): user-to-move nodes reached ≥ `MIN_REACHED = 2` times where a played move loses ≥ `MIN_LOSS = 5` win %.
+- **Ranking:** by Σ count × loss.
+- **Acceptable moves:** Stockfish's best plus the user's own moves within `ACCEPTABLE_LOSS = 3`.
+- **Card id:** `${account}:${color}:${positionKey}`, so it stays stable as the tree grows.
+- Weakness is computed over all imported games, so a spot stays until the history changes.
+
+**Drill** (`components/openings/OpeningDrill.tsx`, logic in `lib/openings/drill.ts`):
+- **Flow:** the usual line replays (350 ms a move), then the user finds a move.
+- **Judging:** known good and bad moves are judged instantly. An unknown move is evaluated live through `analysisQueue.evaluate(fen)` (cache first, then the shared engine) and accepted within 3 win %.
+- **Grading:** the same outcome rules as puzzles, with `kind: "opening"` cards. There are `NEW_DRILLS_PER_DAY = 5` new drills a day.
+- **After the drill:** it shows the habit and Stockfish's main line.
+
+**Shared SRS:**
+- `dailyQueue<T extends {id}>()` is generic, with a per-kind new allowance.
+- `recordReview()` is generic; `recordAttempt()` is the puzzle wrapper.
+
+**Shared board** (`components/board/InteractiveBoard.tsx`): drag and click-to-move with legality checks and auto-queen, used by both the puzzle solver and the opening drill.
+
+**Page** (`/openings`, `components/openings/OpeningTrainer.tsx`):
+- Account select, As white/As black, and Drill/Explore modes.
+- The ranked `WeakSpotList`.
+- `OpeningExplorer`: breadcrumbs, move table with games, score and cost; ★ marks Stockfish's choice.
+- An **"Analyze opening positions"** button evaluates only the missing evals that weak-spot detection needs. It took about 12 s for hikaru's 62 positions.
+
+**Test data note:** the in-app browser also holds the owner's real account (`chesscom:kaithepondgod`). Test drills and puzzles on hikaru or penguingim1, so no cards or reviews get written into the owner's schedule.
 
 ### Later phases (design already agreed)
 

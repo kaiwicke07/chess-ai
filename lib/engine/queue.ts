@@ -75,6 +75,20 @@ class AnalysisQueue {
     void this.run()
   }
 
+  /**
+   * Evaluates one position on demand (an opening drill checking a move it
+   * hasn't seen), reusing the cache. Shares the queue's engine, whose searches
+   * are serialized, so at worst it waits for the current position to finish.
+   */
+  async evaluate(fen: string): Promise<PositionEval> {
+    const cached = await db.evals.get(positionKey(fen))
+    if (cached && cached.depth >= ANALYSIS_DEPTH) return cached
+    this.engine ??= new Engine()
+    const result = await evaluatePosition(this.engine, fen, ANALYSIS_DEPTH)
+    await db.evals.put(result)
+    return result
+  }
+
   /** Drops everything waiting and stops the current game. */
   clear() {
     this.pending = []

@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { Chess, type Square } from "chess.js"
-import { Chessboard } from "react-chessboard"
+import { Chess } from "chess.js"
 import { ArrowRight, CalendarClock, Eye, Lightbulb } from "lucide-react"
 import type { Grade } from "ts-fsrs"
 
+import { InteractiveBoard } from "@/components/board/InteractiveBoard"
 import { JUDGEMENT_TEXT } from "@/components/review/judgementStyles"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -25,10 +25,6 @@ import { THEME_LABELS } from "@/lib/puzzles/themes"
 import { GRADE_LABELS } from "@/lib/srs/grading"
 import { formatInterval } from "@/lib/srs/scheduler"
 import type { Game, Puzzle } from "@/lib/types"
-
-const HIGHLIGHT = { backgroundColor: "color-mix(in oklch, var(--primary) 35%, transparent)" }
-const SELECTED = { backgroundColor: "color-mix(in oklch, var(--primary) 55%, transparent)" }
-const HINT = { boxShadow: "inset 0 0 0 4px var(--best)" }
 
 const OUTCOME_TEXT: Record<SolveOutcome, string> = {
   clean: "Solved!",
@@ -67,7 +63,6 @@ export function PuzzleSolver({
     startedAt.current = Date.now()
   }, [])
   const elapsed = () => Date.now() - startedAt.current
-  const [selected, setSelected] = useState<string | null>(null)
   const [wrong, setWrong] = useState(false)
   // A mating move other than the stored one ends the puzzle on its own position
   const [finalFen, setFinalFen] = useState<string | null>(null)
@@ -86,36 +81,23 @@ export function PuzzleSolver({
     return () => clearTimeout(timer)
   }, [replyPending, state.status, state.step, puzzle.solution.length])
 
-  function tryMove(from: string, to: string): boolean {
-    if (!userToMove) return false
-    const chess = new Chess(fen)
-    const piece = chess.get(from as Square)
-    if (!piece || piece.color !== (puzzle.color === "white" ? "w" : "b")) return false
-    if (!chess.moves({ square: from as Square, verbose: true }).some((m) => m.to === to)) return false
-
-    const promotion = piece.type === "p" && (to[1] === "8" || to[1] === "1") ? "q" : ""
-    const result = userMove(state, puzzle, from + to + promotion)
+  // The board only passes on legal moves for the user's side
+  function handleMove(uci: string): boolean {
+    const result = userMove(state, puzzle, uci)
     setState(result.state)
-    setSelected(null)
     if (!result.played) {
       setWrong(true)
       return false
     }
     setWrong(false)
     if (result.played !== puzzle.solution[state.step]) {
-      chess.move({ from, to, promotion: promotion || undefined })
+      const chess = new Chess(fen)
+      chess.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] })
       setFinalFen(chess.fen())
     }
     const finished = outcomeOf(result.state)
     if (finished) onFinished(finished, elapsed())
     return true
-  }
-
-  function onSquareClick(square: string) {
-    if (selected && tryMove(selected, square)) return
-    const piece = new Chess(fen).get(square as Square)
-    const own = piece && piece.color === (puzzle.color === "white" ? "w" : "b")
-    setSelected(own && userToMove ? square : null)
   }
 
   function showSolution() {
@@ -125,17 +107,13 @@ export function PuzzleSolver({
     onFinished("failed", elapsed())
   }
 
-  // Highlights: last move, selected piece, and the hint square
+  // The move that led to the shown position: the opponent's game move at first
   const last =
     state.step > 0 && !finalFen
       ? { from: puzzle.solution[state.step - 1].slice(0, 2), to: puzzle.solution[state.step - 1].slice(2, 4) }
       : !finalFen
         ? puzzle.previousMove
         : null
-  const squareStyles: Record<string, React.CSSProperties> = {}
-  if (last) squareStyles[last.from] = squareStyles[last.to] = HIGHLIGHT
-  if (selected) squareStyles[selected] = SELECTED
-  if (state.hintUsed && userToMove) squareStyles[puzzle.solution[state.step].slice(0, 2)] = HINT
 
   const colorName = puzzle.color === "white" ? "White" : "Black"
   const opponent = game && (game.userColor === "white" ? game.black : game.white)
@@ -149,25 +127,15 @@ export function PuzzleSolver({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,34rem)_minmax(18rem,1fr)] lg:items-start">
-      <div className="overflow-hidden rounded-lg">
-        <Chessboard
-          options={{
-            id: "puzzle-board",
-            position: fen,
-            boardOrientation: puzzle.color,
-            allowDragging: userToMove,
-            canDragPiece: ({ piece }) => piece.pieceType[0] === (puzzle.color === "white" ? "w" : "b"),
-            onPieceDrop: ({ sourceSquare, targetSquare }) => !!targetSquare && tryMove(sourceSquare, targetSquare),
-            onSquareClick: ({ square }) => onSquareClick(square),
-            animationDurationInMs: 200,
-            squareStyles,
-            darkSquareStyle: { backgroundColor: "var(--board-dark)" },
-            lightSquareStyle: { backgroundColor: "var(--board-light)" },
-            darkSquareNotationStyle: { color: "var(--board-light)" },
-            lightSquareNotationStyle: { color: "var(--board-dark)" },
-          }}
-        />
-      </div>
+      <InteractiveBoard
+        id="puzzle-board"
+        fen={fen}
+        color={puzzle.color}
+        canMove={userToMove}
+        onMove={handleMove}
+        lastMove={last}
+        hintSquare={state.hintUsed && userToMove ? puzzle.solution[state.step].slice(0, 2) : null}
+      />
 
       <aside className="flex flex-col gap-4 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
         <div className="flex items-center gap-2">
