@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from "dexie"
 
-import type { Account, Game, GameAnalysis, PositionEval, Puzzle } from "@/lib/types"
+import type { Account, Game, GameAnalysis, PositionEval, Puzzle, ReviewCard, ReviewLog } from "@/lib/types"
 
 /**
  * All user data lives in this IndexedDB database. Each schema change gets a
@@ -12,6 +12,8 @@ class TrainerDB extends Dexie {
   evals!: EntityTable<PositionEval, "key">
   analyses!: EntityTable<GameAnalysis, "gameId">
   puzzles!: EntityTable<Puzzle, "id">
+  cards!: EntityTable<ReviewCard, "id">
+  reviews!: EntityTable<ReviewLog, "id">
 
   constructor() {
     super("chess-trainer")
@@ -30,6 +32,12 @@ class TrainerDB extends Dexie {
     // v3: puzzles generated from the user's mistakes
     this.version(3).stores({
       puzzles: "id, gameId, account, createdAt",
+    })
+    // v4: spaced repetition. cards hold the schedule (one per puzzle, indexed
+    // by due date); reviews are an append-only log of every attempt.
+    this.version(4).stores({
+      cards: "id, due, kind, refId, createdAt",
+      reviews: "++id, cardId, refId, reviewedAt",
     })
   }
 }

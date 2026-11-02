@@ -1,6 +1,8 @@
 import { Chess } from "chess.js"
 
-import type { Puzzle } from "@/lib/types"
+import type { Puzzle, SolveOutcome } from "@/lib/types"
+
+export type { SolveOutcome }
 
 export interface SolveState {
   /** How many solution moves are on the board; the next user move is solution[step] */
@@ -14,11 +16,9 @@ export interface SolveState {
 export const START: SolveState = { step: 0, status: "playing", mistakes: 0, hintUsed: false }
 
 /**
- * How the attempt went, for spaced repetition in Phase 6:
+ * How the attempt went, graded by lib/srs/grading.ts:
  * clean (no help), hinted (used a hint), retried (a wrong move first), failed.
  */
-export type SolveOutcome = "clean" | "hinted" | "retried" | "failed"
-
 export function outcomeOf(state: SolveState): SolveOutcome | null {
   if (state.status === "playing") return null
   if (state.status === "failed") return "failed"

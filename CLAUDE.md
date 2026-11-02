@@ -43,7 +43,8 @@ npx next typegen   # regenerate route types after adding routes
 | Validation | Zod 4 (external API responses) |
 | Charts | Recharts 3 |
 | Tests | Vitest 5 (`vitest.config.mts`, `@` alias mirrors tsconfig) |
-| Planned | ts-fsrs (Phase 6). Add Zustand only if components really need shared state; plain React state has been enough so far. |
+| Spaced repetition | ts-fsrs 6 (Phase 6) |
+| State | Plain React state plus `useLiveQuery` so far. Add Zustand only if components really need shared state. |
 
 ## Architecture as built
 
@@ -114,8 +115,8 @@ npx next typegen   # regenerate route types after adding routes
 | 3 | Stockfish analysis: worker wrapper, background queue, eval bar and graph, engine line, per-position cache | ✅ Done (`c9bea62`) |
 | 4 | Classification and explanations: Lichess-faithful judgements and accuracy, arrows, badges, template explanations | ✅ Done ("Flag mistakes..." commit) |
 | 5 | Puzzle generator and solver: MultiPV-2 uniqueness, multi-move lines, themes, `/puzzles` solver, links to and from the review | ✅ Done ("Generate puzzles..." commit) |
-| 6 | **Spaced repetition (FSRS)** | ⏭ Next |
-| 7 | Opening trainer | Planned |
+| 6 | Spaced repetition: ts-fsrs scheduling, auto-grading, daily queue, persistent review log, header badge | ✅ Done ("Schedule puzzles with spaced repetition" commit) |
+| 7 | **Opening trainer** | ⏭ Next |
 | 8 | Replay mode vs Stockfish | Planned |
 | 9 | Progress dashboard | Planned |
 | 10 | Polish and ship | Planned |
@@ -193,6 +194,40 @@ The original spec follows for reference.
 - Any checkmating move is accepted. The board auto-queens, which also counts for an underpromotion.
 - **UI:** `components/puzzles/PuzzleSolver.tsx` (drag or click-to-move, auto-reply, hint, show solution) and `PuzzleTrainer.tsx` (the `/puzzles` page, theme filters). Results are session-only until Phase 6.
 - **Links:** `/puzzles#<puzzleId>` selects a puzzle. `/review/...#ply=N` opens a game at a move. The review's feedback panel links "Practice this position" on moves that became puzzles.
+
+### Phase 6: spaced repetition (done)
+
+**Scheduler** (`lib/srs/scheduler.ts`): ts-fsrs **6.0** at `request_retention: 0.9` with fuzz on.
+- **Learning steps:** `learning_steps` and `relearning_steps` are both `["10m"]`.
+- **Resulting intervals for a new card:** Again 10 min, Hard 15 min, Good about 2 days, Easy about 8 days. A miss comes back in the same session; a correct solve goes straight to days.
+- **Why one step:** the default `["1m","10m"]` would repeat a just-solved puzzle 10 minutes later.
+
+**Grading** (`lib/srs/grading.ts`) is automatic, from the Phase 5 outcome:
+
+| Outcome | Grade |
+|---|---|
+| Failed (showed the solution) | Again |
+| Hinted or retried | Hard |
+| Clean | Good |
+| Clean and ≤ 10 s per user move | Easy |
+
+The spec's "wrong move = Again" was read as a failed attempt, since a retry is a wrong move followed by a solve.
+
+**Storage:** Dexie v4.
+- `cards` (`ReviewCard`) has id `puzzle:${puzzleId}` and is indexed by `due` in ms. The ts-fsrs card is stored as-is (Dates survive IndexedDB).
+- `reviews` (`ReviewLog`) is an append-only log of every attempt: outcome, grade, duration, next due. It's the source for Phase 9 stats.
+- `recordAttempt()` (`lib/srs/record.ts`) writes the card and the log entry in one transaction.
+- Every attempt counts, including free practice before a card is due. Cards for regenerated-away puzzles are ignored.
+- `ReviewCard.kind` already allows `"opening"`. **Phase 7 should reuse the same scheduler and tables** for opening drills.
+
+**Daily queue** (`lib/srs/dailyQueue.ts`): due cards first, most overdue first, then up to `NEW_PER_DAY = 10` never-attempted puzzles. The day starts at local midnight.
+
+**UI:**
+- `/puzzles` has a **Today** mode (the queue, an "Up next" list, a done-for-today state) and an **All puzzles** mode (free practice with theme filters, each card's schedule shown).
+- After an attempt the solver shows "Graded Easy · next review in 9 days".
+- The header's `PuzzlesDueBadge` shows today's count.
+
+**`lib/useNow.ts`:** a ticking clock that starts at 0 and is set after mount. Use it rather than `Date.now()` in render; React's purity lint forbids that.
 
 ### Later phases (design already agreed)
 

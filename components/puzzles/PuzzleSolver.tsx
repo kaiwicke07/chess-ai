@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { Chess, type Square } from "chess.js"
 import { Chessboard } from "react-chessboard"
-import { ArrowRight, Eye, Lightbulb } from "lucide-react"
+import { ArrowRight, CalendarClock, Eye, Lightbulb } from "lucide-react"
+import type { Grade } from "ts-fsrs"
 
 import { JUDGEMENT_TEXT } from "@/components/review/judgementStyles"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +22,8 @@ import {
   type SolveState,
 } from "@/lib/puzzles/solve"
 import { THEME_LABELS } from "@/lib/puzzles/themes"
+import { GRADE_LABELS } from "@/lib/srs/grading"
+import { formatInterval } from "@/lib/srs/scheduler"
 import type { Game, Puzzle } from "@/lib/types"
 
 const HIGHLIGHT = { backgroundColor: "color-mix(in oklch, var(--primary) 35%, transparent)" }
@@ -46,15 +49,24 @@ const REPLY_DELAY_MS = 450
 export function PuzzleSolver({
   puzzle,
   game,
+  review,
   onFinished,
   onNext,
 }: {
   puzzle: Puzzle
   game: Game | undefined
-  onFinished: (outcome: SolveOutcome) => void
+  /** The schedule this attempt produced, once it's saved */
+  review: { due: number; grade: number; savedAt: number } | null
+  onFinished: (outcome: SolveOutcome, durationMs: number) => void
   onNext: (() => void) | null
 }) {
   const [state, setState] = useState<SolveState>(START)
+  // Attempt timer for grading; starts when the puzzle appears
+  const startedAt = useRef(0)
+  useEffect(() => {
+    startedAt.current = Date.now()
+  }, [])
+  const elapsed = () => Date.now() - startedAt.current
   const [selected, setSelected] = useState<string | null>(null)
   const [wrong, setWrong] = useState(false)
   // A mating move other than the stored one ends the puzzle on its own position
@@ -95,7 +107,7 @@ export function PuzzleSolver({
       setFinalFen(chess.fen())
     }
     const finished = outcomeOf(result.state)
-    if (finished) onFinished(finished)
+    if (finished) onFinished(finished, elapsed())
     return true
   }
 
@@ -110,7 +122,7 @@ export function PuzzleSolver({
     const failed: SolveState = { ...state, status: "failed" }
     setState(failed)
     setWrong(false)
-    onFinished("failed")
+    onFinished("failed", elapsed())
   }
 
   // Highlights: last move, selected piece, and the hint square
@@ -188,6 +200,16 @@ export function PuzzleSolver({
 
         {outcome && (
           <div className="flex flex-col gap-3 text-sm">
+            {review && (
+              <p className="flex items-center gap-2" role="status">
+                <CalendarClock className="size-4 text-primary" aria-hidden />
+                <span>
+                  Graded <span className="font-medium">{GRADE_LABELS[review.grade as Grade]}</span> · next review in{" "}
+                  {/* The moment it was saved is "now" enough for a relative time */}
+                  {formatInterval(review.due, review.savedAt)}
+                </span>
+              </p>
+            )}
             <div className="flex flex-wrap gap-1.5">
               {puzzle.themes.map((theme) => (
                 <Badge key={theme} variant="secondary">

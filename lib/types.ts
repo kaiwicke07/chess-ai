@@ -1,3 +1,5 @@
+import type { Card as FsrsCard } from "ts-fsrs"
+
 export type Platform = "lichess" | "chesscom"
 export type Color = "white" | "black"
 
@@ -99,6 +101,43 @@ export interface Puzzle {
   /** What the user actually played in the game */
   played: { uci: string; san: string; judgement: "mistake" | "blunder" }
   createdAt: number
+}
+
+/** How a puzzle attempt went; see lib/puzzles/solve.ts */
+export type SolveOutcome = "clean" | "hinted" | "retried" | "failed"
+
+/**
+ * Spaced-repetition state for one thing to practice. Puzzles now; Phase 7
+ * adds opening positions under the same scheduler.
+ */
+export interface ReviewCard {
+  /** `${kind}:${refId}` */
+  id: string
+  kind: "puzzle" | "opening"
+  /** The puzzle (or opening node) id */
+  refId: string
+  account: string
+  /** ts-fsrs's card: stability, difficulty, due date, learning state, … */
+  fsrs: FsrsCard
+  /** fsrs.due as ms, duplicated so Dexie can index it */
+  due: number
+  createdAt: number
+}
+
+/** One attempt, kept forever: the source for progress stats (Phase 9). */
+export interface ReviewLog {
+  id?: number
+  cardId: string
+  kind: ReviewCard["kind"]
+  refId: string
+  account: string
+  outcome: SolveOutcome
+  /** FSRS grade: 1 Again, 2 Hard, 3 Good, 4 Easy */
+  grade: number
+  durationMs: number
+  reviewedAt: number
+  /** When this review scheduled the next one */
+  nextDue: number
 }
 
 export interface Account {
