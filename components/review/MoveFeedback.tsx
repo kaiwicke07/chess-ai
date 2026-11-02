@@ -1,15 +1,23 @@
+import Link from "next/link"
+import { Puzzle } from "lucide-react"
+
 import { JUDGEMENT_TEXT } from "@/components/review/judgementStyles"
 import { JUDGEMENT_GLYPHS, JUDGEMENT_LABELS, type MoveAssessment } from "@/lib/analysis/classify"
 
-/** Verdict on the move that led to the shown position, with the explanation. */
+/**
+ * Verdict on the move that led to the shown position, with the explanation,
+ * and a link to practice it when the position became a puzzle.
+ */
 export function MoveFeedback({
   san,
   assessment,
   explanation,
+  puzzleId,
 }: {
   san: string
   assessment: MoveAssessment
   explanation: string | null
+  puzzleId: string | null
 }) {
   const { judgement } = assessment
   const winDrop = Math.round(assessment.winBefore - assessment.winAfter)
@@ -34,6 +42,14 @@ export function MoveFeedback({
         {winDrop > 0 && <span className="text-xs text-muted-foreground tabular-nums">−{winDrop}% win chance</span>}
       </div>
       {explanation && <p className="text-pretty">{explanation}</p>}
+      {puzzleId && (
+        <Link
+          href={`/puzzles#${encodeURIComponent(puzzleId)}`}
+          className="mt-1 flex w-fit items-center gap-1.5 text-primary underline-offset-4 hover:underline"
+        >
+          <Puzzle className="size-4" aria-hidden /> Practice this position
+        </Link>
+      )}
     </div>
   )
 }

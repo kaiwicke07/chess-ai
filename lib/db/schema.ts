@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from "dexie"
 
-import type { Account, Game, GameAnalysis, PositionEval } from "@/lib/types"
+import type { Account, Game, GameAnalysis, PositionEval, Puzzle } from "@/lib/types"
 
 /**
  * All user data lives in this IndexedDB database. Each schema change gets a
@@ -11,6 +11,7 @@ class TrainerDB extends Dexie {
   accounts!: EntityTable<Account, "id">
   evals!: EntityTable<PositionEval, "key">
   analyses!: EntityTable<GameAnalysis, "gameId">
+  puzzles!: EntityTable<Puzzle, "id">
 
   constructor() {
     super("chess-trainer")
@@ -26,10 +27,23 @@ class TrainerDB extends Dexie {
       evals: "key",
       analyses: "gameId",
     })
+    // v3: puzzles generated from the user's mistakes
+    this.version(3).stores({
+      puzzles: "id, gameId, account, createdAt",
+    })
   }
 }
 
 export const db = new TrainerDB()
+
+/**
+ * Fully processed: every position analyzed at `depth` and the game scanned
+ * for puzzles by the current generator. Older records count as unfinished,
+ * so games analyzed before a generator change get rescanned.
+ */
+export function isComplete(analysis: GameAnalysis | undefined, depth: number, puzzleVersion: number): boolean {
+  return !!analysis && analysis.depth >= depth && analysis.puzzleVersion === puzzleVersion
+}
 
 /** One account's games, newest first. */
 export function gamesForAccount(account: string) {

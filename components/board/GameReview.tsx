@@ -40,7 +40,12 @@ export function GameReview({ gameId }: { gameId: string }) {
 function Review({ game }: { game: Game }) {
   const positions = useMemo(() => replayMoves(game.moves), [game.moves])
   const lastPly = positions.length - 1
-  const [ply, setPly] = useState(0)
+  // A #ply=N link (from a puzzle) opens the game at that position. Review
+  // only renders in the browser, after the game loads, so window is safe here.
+  const [ply, setPly] = useState(() => {
+    const fromHash = Number(window.location.hash.match(/ply=(\d+)/)?.[1])
+    return Number.isInteger(fromHash) ? Math.min(fromHash, positions.length - 1) : 0
+  })
   const [orientation, setOrientation] = useState<Color>(game.userColor)
   const evals = useGameEvals(game.id, positions)
   const queue = useAnalysisQueue()
@@ -50,6 +55,11 @@ function Review({ game }: { game: Game }) {
   const assessments = useMemo(
     () => (evals ? assessMoves(positions, evals) : positions.map(() => null)),
     [positions, evals],
+  )
+  // Puzzles start on the position before the user's mistake, so key by that ply
+  const puzzles = useLiveQuery(
+    async () => new Map((await db.puzzles.where("gameId").equals(game.id).toArray()).map((p) => [p.ply, p.id])),
+    [game.id],
   )
   const accuracy = useMemo(
     () => (evals?.every(Boolean) ? gameAccuracy(evals.map((entry) => entry!.eval)) : null),
@@ -63,8 +73,9 @@ function Review({ game }: { game: Game }) {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.altKey || event.ctrlKey || event.metaKey) return
-      const target = event.target as HTMLElement
-      if (target.closest("input, textarea, select, [contenteditable]")) return
+      // Don't steal keys from form fields (target can be a non-element, e.g. window)
+      const target = event.target
+      if (target instanceof Element && target.closest("input, textarea, select, [contenteditable]")) return
 
       const steps: Record<string, (p: number) => number> = {
         ArrowLeft: (p) => p - 1,
@@ -170,7 +181,14 @@ function Review({ game }: { game: Game }) {
 
           {accuracy && <AccuracySummary game={game} accuracy={accuracy} assessments={assessments} />}
           <EngineLine fen={positions[ply].fen} entry={evals?.[ply]} progress={progress} error={queue.error} />
-          {move && current && <MoveFeedback san={move.san} assessment={current} explanation={explanation} />}
+          {move && current && (
+            <MoveFeedback
+              san={move.san}
+              assessment={current}
+              explanation={explanation}
+              puzzleId={puzzles?.get(ply - 1) ?? null}
+            />
+          )}
           {evals && <EvalGraph evals={evals} assessments={assessments} ply={ply} onSelect={select} />}
 
           <MoveList

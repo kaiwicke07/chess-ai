@@ -12,7 +12,7 @@ export function EngineLine({
 }: {
   fen: string
   entry: PositionEval | undefined
-  progress: { done: number; total: number } | null
+  progress: { phase: "evals" | "puzzles"; done: number; total: number } | null
   error: string | null
 }) {
   let line: React.ReactNode
@@ -41,7 +41,9 @@ export function EngineLine({
         </span>
         <span className="text-xs text-muted-foreground">
           {progress && progress.total
-            ? `Analyzing ${progress.done}/${progress.total}`
+            ? progress.phase === "puzzles"
+              ? `Finding puzzles ${progress.done}/${progress.total}`
+              : `Analyzing ${progress.done}/${progress.total}`
             : entry
               ? `${ENGINE_NAME} · depth ${entry.depth}`
               : ENGINE_NAME}

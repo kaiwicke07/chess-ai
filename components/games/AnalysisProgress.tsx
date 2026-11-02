@@ -23,9 +23,10 @@ export function AnalysisProgress({
   const waiting = queue.pending.filter((id) => ours.has(id)).length
 
   if (active || waiting) {
-    // total is 0 for the moment between picking a game and loading it
-    const fraction = active && active.total ? active.done / active.total : 0
-    const percent = Math.round(fraction * 100)
+    // total is 0 for the moment between picking a game and loading it.
+    // Evals are roughly the first 70% of a game's work, the puzzle scan the rest.
+    const phaseFraction = active && active.total ? active.done / active.total : 0
+    const fraction = active?.phase === "puzzles" ? 0.7 + 0.3 * phaseFraction : 0.7 * phaseFraction
     const analyzed = gameIds.length - unanalyzedIds.length
     return (
       <div className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm ring-1 ring-foreground/10">
@@ -33,7 +34,15 @@ export function AnalysisProgress({
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <span role="status">
             Analyzing with Stockfish · {analyzed} of {gameIds.length} done
-            {active && <span className="text-muted-foreground"> · current game {percent}%</span>}
+            {active && (
+              <span className="text-muted-foreground">
+                {" "}
+                · current game:{" "}
+                {active.phase === "puzzles"
+                  ? `checking mistakes for puzzles ${active.done}/${active.total}`
+                  : `${Math.round(phaseFraction * 100)}%`}
+              </span>
+            )}
           </span>
           <div className="h-1.5 overflow-hidden rounded-full bg-muted">
             <div
@@ -59,7 +68,7 @@ export function AnalysisProgress({
         ) : (
           <>
             {unanalyzedIds.length} {unanalyzedIds.length === 1 ? "game hasn't" : "games haven't"} been analyzed yet.
-            Stockfish runs in your browser, usually 15–30 seconds per game.
+            Stockfish runs in your browser and turns your mistakes into puzzles, usually 20–45 seconds per game.
           </>
         )}
       </span>

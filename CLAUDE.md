@@ -51,6 +51,7 @@ npx next typegen   # regenerate route types after adding routes
   - `/` is the landing page: `UsernameForm`, and `RecentAccounts` from Dexie.
   - `/u/[platform]/[username]` is the game list, sync and analysis queue (`components/games/GameLibrary.tsx`).
   - `/review/[platform]/[sourceId]` is the review board (`components/board/GameReview.tsx`). The game id is `${platform}:${sourceId}`.
+  - `/puzzles` is the puzzle trainer (static page; all data comes from Dexie). It's linked from the header nav.
 - **No server code.** The browser fetches Lichess and Chess.com directly; both send `Access-Control-Allow-Origin: *`. The planned `/api/games` proxy was dropped. Lichess rate-limits per IP, so proxying would pool every visitor's limit, and Lichess also rejects some non-browser User-Agents.
 - **Data model:** see `lib/types.ts`.
   - **`Game`:** SAN moves from the standard start, and `clocks` (ms remaining after each ply, aligned with `moves`, or null). The result is from the user's side. `account` is `platform:lowercased-username`.
@@ -100,6 +101,7 @@ npx next typegen   # regenerate route types after adding routes
 - **Win % has two variants.** For "the mover's win chance", use `winPercentFor(eval, color)`: black's chance is `100 − white's`. For mover-side display, use `evalFor`. Classification needs uncapped `winningChances`; see Phase 4.
 - **In-app Browser pane testing:** the pane hides itself again between turns. While the pane is hidden, `requestAnimationFrame` never fires, so a full page reload won't hydrate and Suspense content isn't revealed. Show the pane (`mcp__ccd_view__show_pane` with `preview`) before testing, or navigate client-side from `/`.
 - **PowerShell `ConvertTo-Json`/`Set-Content`** writes a BOM and reformats JSON, which broke `package.json` once. Edit JSON with a Node one-liner instead.
+- **Browser-tool scripts time out after 45 s.** For long background work, start it, then poll in short calls. A full page load kills the queue's worker, so keep background work running by navigating client-side (header nav, links).
 - **Measured engine speed (depth 14):** about 115 ms per position in Node and about 200 ms in the browser, so 10–30 s per game. A 158-ply game took about 35 s.
 
 ## Phase plan and progress
@@ -111,8 +113,8 @@ npx next typegen   # regenerate route types after adding routes
 | 2 | Review board: step through moves, keyboard (←→↑↓, Home/End, F flips), move list, clocks | ✅ Done (`b1b3210`) |
 | 3 | Stockfish analysis: worker wrapper, background queue, eval bar and graph, engine line, per-position cache | ✅ Done (`c9bea62`) |
 | 4 | Classification and explanations: Lichess-faithful judgements and accuracy, arrows, badges, template explanations | ✅ Done ("Flag mistakes..." commit) |
-| 5 | **Puzzle generator and solver** | ⏭ Next |
-| 6 | Spaced repetition (FSRS) | Planned |
+| 5 | Puzzle generator and solver: MultiPV-2 uniqueness, multi-move lines, themes, `/puzzles` solver, links to and from the review | ✅ Done ("Generate puzzles..." commit) |
+| 6 | **Spaced repetition (FSRS)** | ⏭ Next |
 | 7 | Opening trainer | Planned |
 | 8 | Replay mode vs Stockfish | Planned |
 | 9 | Progress dashboard | Planned |
@@ -173,9 +175,28 @@ The original spec follows for reference.
 
 **Done when:** blunders are flagged with lines like "This hangs your knight to Nxe5", and the flags broadly match Lichess's own analysis on a few test games.
 
+### Phase 5: puzzles (done)
+
+**Generation and data:**
+- **Where it runs:** `lib/puzzles/generate.ts` runs as phase 2 of each game in the analysis queue, after the evals.
+- **Search:** each user mistake or blunder gets a depth-18 MultiPV-2 search, about 1.5–2 s each in the browser.
+- **Kept when:** the best move beats the second by ≥15 win %, or it's the only mate.
+- **Extended:** to up to 3 user moves, only while the user's win chance is ≥70% and no material has been cashed in yet.
+- **Rejected:** only-move positions and cases where a deeper search agrees with the game move.
+- **Storage:** Dexie v3 `puzzles` table. Ids are `${gameId}:${ply}`, where ply is the start position, the one before the user's move.
+- **Completion:** `analyses.puzzleVersion` marks a game as scanned, and `isComplete()` in `lib/db/schema.ts` needs both the evals depth and `PUZZLE_VERSION`. **Bump `PUZZLE_VERSION`** after changing the rules, and every game gets rescanned.
+
+**Themes** (`lib/puzzles/themes.ts`): `mate` (with `mateIn`), `fork`, `hangingPiece`, `material`, then `advantage` or `defense`. The last two are fallbacks, chosen by the user's win chance after the best move (≥60 means `advantage`).
+
+**Solving and UI:**
+- `lib/puzzles/solve.ts` is a pure state machine with an outcome of `clean`, `hinted`, `retried` or `failed`. Phase 6 maps these to FSRS grades.
+- Any checkmating move is accepted. The board auto-queens, which also counts for an underpromotion.
+- **UI:** `components/puzzles/PuzzleSolver.tsx` (drag or click-to-move, auto-reply, hint, show solution) and `PuzzleTrainer.tsx` (the `/puzzles` page, theme filters). Results are session-only until Phase 6.
+- **Links:** `/puzzles#<puzzleId>` selects a puzzle. `/review/...#ply=N` opens a game at a move. The review's feedback panel links "Practice this position" on moves that became puzzles.
+
 ### Later phases (design already agreed)
 
-- **5. Puzzle generator:**
+- **5. Puzzle generator** (done, see above):
   - **Candidates:** the position before each user mistake or blunder; the answer is Stockfish's best move.
   - **Uniqueness:** re-analyze the candidates at about depth 18 with MultiPV 2. Keep a candidate only if move 1 beats move 2 by at least ~15 win-% points (this also drops positions already decided).
   - **Multi-move:** extend while the next user move is still unique, up to 3 user moves. Any mating move counts as correct.

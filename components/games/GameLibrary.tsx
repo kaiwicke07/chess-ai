@@ -10,8 +10,9 @@ import { GameCard, type AnalysisStatus } from "@/components/games/GameCard"
 import { GameListSkeleton } from "@/components/games/GameListSkeleton"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { db, gamesForAccount } from "@/lib/db/schema"
+import { db, gamesForAccount, isComplete } from "@/lib/db/schema"
 import { ANALYSIS_DEPTH } from "@/lib/engine/analyzeGame"
+import { PUZZLE_VERSION } from "@/lib/puzzles/generate"
 import { useAnalysisQueue } from "@/lib/engine/useAnalysisQueue"
 import { formatRelative } from "@/lib/format"
 import { accountId, PLATFORM_LABELS, SourceError } from "@/lib/sources/normalize"
@@ -35,7 +36,12 @@ export function GameLibrary({ platform, username }: { platform: Platform; userna
   const account = useLiveQuery(async () => (await db.accounts.get(id)) ?? null, [id])
   const [sync, setSync] = useState<SyncState>({ status: "idle" })
   const analyzed = useLiveQuery(
-    async () => new Set((await db.analyses.toArray()).filter((a) => a.depth >= ANALYSIS_DEPTH).map((a) => a.gameId)),
+    async () =>
+      new Set(
+        (await db.analyses.toArray())
+          .filter((a) => isComplete(a, ANALYSIS_DEPTH, PUZZLE_VERSION))
+          .map((a) => a.gameId),
+      ),
     [],
   )
   const queue = useAnalysisQueue()

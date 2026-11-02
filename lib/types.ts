@@ -73,6 +73,32 @@ export interface GameAnalysis {
   gameId: string
   depth: number
   completedAt: number
+  /** Puzzle generator version this game was scanned with; missing if never scanned */
+  puzzleVersion?: number
+}
+
+export type PuzzleTheme = "mate" | "hangingPiece" | "fork" | "material" | "advantage" | "defense"
+
+/** A position from the user's own game where one move is clearly best. */
+export interface Puzzle {
+  /** `${gameId}:${ply}` */
+  id: string
+  gameId: string
+  account: string
+  /** Index into the game's positions of the puzzle's start (user to move) */
+  ply: number
+  fen: string
+  color: Color
+  /** UCI moves: the user's, the opponent's reply, the user's, …; always ends on a user move */
+  solution: string[]
+  themes: PuzzleTheme[]
+  /** Moves to mate, when the solution ends in checkmate */
+  mateIn: number | null
+  /** The opponent's move that led to the start position, for context on the board */
+  previousMove: { from: string; to: string } | null
+  /** What the user actually played in the game */
+  played: { uci: string; san: string; judgement: "mistake" | "blunder" }
+  createdAt: number
 }
 
 export interface Account {
