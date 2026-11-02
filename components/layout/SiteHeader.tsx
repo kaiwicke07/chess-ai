@@ -29,6 +29,12 @@ export function SiteHeader() {
           >
             Openings
           </Link>
+          <Link
+            href="/progress"
+            className="rounded-md px-3 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            Progress
+          </Link>
         </nav>
       </div>
     </header>

@@ -54,6 +54,7 @@
   --color-blunder: var(--blunder);
   --color-board-light: var(--board-light);
   --color-board-dark: var(--board-dark);
+  --color-chart-series: var(--chart-series);
 }
 
 /* shadcn's light palette, unused while the app is dark-only (see layout.tsx) */
@@ -136,6 +137,9 @@
   --sidebar-accent-foreground: oklch(0.96 0.005 265);
   --sidebar-border: oklch(1 0 0 / 9%);
   --sidebar-ring: oklch(0.72 0.15 285);
+  /* Chart marks: the brand violet stepped into the dark-surface lightness band
+     (OKLCH L 0.48–0.67), validated with the dataviz palette checker on --card */
+  --chart-series: oklch(0.66 0.15 285);
 }
 
 @layer base {

@@ -55,6 +55,7 @@ npx next typegen   # regenerate route types after adding routes
   - `/puzzles` is the puzzle trainer (static page; all data comes from Dexie). It's linked from the header nav.
   - `/openings` is the opening trainer (static page). It's linked from the header nav.
   - `/play/[platform]/[sourceId]` is replay mode against Stockfish. It's linked from the review page.
+  - `/progress` is the progress dashboard (static page). It's linked from the header nav.
 - **No server code.** The browser fetches Lichess and Chess.com directly; both send `Access-Control-Allow-Origin: *`. The planned `/api/games` proxy was dropped. Lichess rate-limits per IP, so proxying would pool every visitor's limit, and Lichess also rejects some non-browser User-Agents.
 - **Data model:** see `lib/types.ts`.
   - **`Game`:** SAN moves from the standard start, and `clocks` (ms remaining after each ply, aligned with `moves`, or null). The result is from the user's side. `account` is `platform:lowercased-username`.
@@ -120,8 +121,8 @@ npx next typegen   # regenerate route types after adding routes
 | 6 | Spaced repetition: ts-fsrs scheduling, auto-grading, daily queue, persistent review log, header badge | ✅ Done ("Schedule puzzles with spaced repetition" commit) |
 | 7 | Opening trainer: position tree, ranked weak spots, FSRS drills, explorer, opening-only analysis | ✅ Done ("Add the opening trainer" commit) |
 | 8 | Replay mode: turning-point finder, limited-strength opponent engine, take-back/resign, post-game analysis | ✅ Done ("Add replay mode..." commit) |
-| 9 | **Progress dashboard** | ⏭ Next |
-| 10 | Polish and ship | Planned |
+| 9 | Progress dashboard: weekly trends, headline numbers with period change, weaknesses by phase, clock and opening | ✅ Done ("Add the progress dashboard" commit) |
+| 10 | **Polish and ship** | ⏭ Next |
 
 ### Phase 4: classification and explanations (done)
 
@@ -287,6 +288,38 @@ The spec's "wrong move = Again" was read as a failed attempt, since a retry is a
 - Replays aren't stored.
 
 **Test tip:** a browser `navigate` to the same path with only a new hash doesn't remount the page. Use `location.reload()`.
+
+### Phase 9: progress dashboard (done)
+
+**Stats** (`lib/stats/`): computed at view time from stored games, evals and the review log; nothing new is stored.
+- **Per game:** `gameStats.ts` gives per-user-move phase, judgement, accuracy and time pressure, plus game accuracy and opening family.
+- **Aggregates:** `aggregate.ts` has `weeklyTrends` (Monday weeks, empty weeks kept as nulls so gaps show), `summarize`, `byOpening`, `byPhase` and `byPressure`.
+- **Which games count:** only games where every position has an eval at `ANALYSIS_DEPTH`.
+
+**Definitions:**
+
+| Term | Rule |
+|---|---|
+| Opening | First 20 plies |
+| Endgame | Non-pawn material, both sides, ≤ 26 |
+| Middlegame | Otherwise |
+| Time pressure | Clock before the move < max(30 s, 10% of the start time). This is the spec's "<10% or <30 s", literally. |
+| Opening family | Text before ":", apostrophes and hyphens dropped, first two words. This groups Lichess and Chess.com names, e.g. "Caro Kann". |
+| Puzzle accuracy | Share of attempts with outcome `clean` |
+
+**Loading** (`lib/stats/load.ts`):
+- It's called from an effect, not `useLiveQuery`. Evals change on every analyzed position, and a live query over them would recompute every game's stats each time.
+- The page reloads on a cheap signal: `analyses.count + reviews.count`.
+- While new data loads, the previous render stays on screen, dimmed.
+
+**Charts** (followed the dataviz skill):
+- One measure per chart, as small multiples, never two y-axes.
+- Single series, so no legend; the latest value is labelled in the title row.
+- 2px linear line over a 10% wash, dots for isolated or latest weeks, a solid hairline grid, a crosshair tooltip, and a "Show as a table" view.
+- **Series color** is a new `--chart-series` token (`oklch(0.66 0.15 285)`). It's the brand violet stepped into the dark-surface lightness band. The validator's lightness check failed the 0.72 version; this one passes every check on `--card`.
+- Breakdown tables carry inline bars on one scale, so each table is its own accessible view.
+
+**Page** (`/progress`): one filter row (date range 4w / 12w / all, speed, account) scopes everything. Stat tiles show change against the previous equal-length period, with an arrow and a good/bad color. Puzzle stats aren't filtered by speed.
 
 ### Later phases (design already agreed)
 
