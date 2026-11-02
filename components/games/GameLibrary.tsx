@@ -5,11 +5,14 @@ import Link from "next/link"
 import { useLiveQuery } from "dexie-react-hooks"
 import { RefreshCw } from "lucide-react"
 
-import { GameCard } from "@/components/games/GameCard"
+import { AnalysisProgress } from "@/components/games/AnalysisProgress"
+import { GameCard, type AnalysisStatus } from "@/components/games/GameCard"
 import { GameListSkeleton } from "@/components/games/GameListSkeleton"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { db, gamesForAccount } from "@/lib/db/schema"
+import { ANALYSIS_DEPTH } from "@/lib/engine/analyzeGame"
+import { useAnalysisQueue } from "@/lib/engine/useAnalysisQueue"
 import { formatRelative } from "@/lib/format"
 import { accountId, PLATFORM_LABELS, SourceError } from "@/lib/sources/normalize"
 import { syncAccount } from "@/lib/sources/sync"
@@ -31,6 +34,11 @@ export function GameLibrary({ platform, username }: { platform: Platform; userna
   // undefined while loading, null once we know this account was never synced
   const account = useLiveQuery(async () => (await db.accounts.get(id)) ?? null, [id])
   const [sync, setSync] = useState<SyncState>({ status: "idle" })
+  const analyzed = useLiveQuery(
+    async () => new Set((await db.analyses.toArray()).filter((a) => a.depth >= ANALYSIS_DEPTH).map((a) => a.gameId)),
+    [],
+  )
+  const queue = useAnalysisQueue()
 
   // State is only set from callbacks, never synchronously, so the effect below can call this
   const runSync = useCallback(() => {
@@ -49,13 +57,23 @@ export function GameLibrary({ platform, username }: { platform: Platform; userna
     if (neverSynced) runSync()
   }, [neverSynced, runSync])
 
-  if (games === undefined || account === undefined) return <GameListSkeleton />
+  if (games === undefined || account === undefined || analyzed === undefined) return <GameListSkeleton />
 
   // A never-synced account counts as syncing: the effect above has just started it
   const syncing = sync.status === "syncing" || (neverSynced && sync.status === "idle")
   const me = games[0] && (games[0].userColor === "white" ? games[0].white : games[0].black)
   const record = { win: 0, draw: 0, loss: 0 }
   for (const game of games) record[game.result]++
+  const gameIds = games.map((game) => game.id)
+  const unanalyzedIds = gameIds.filter((gameId) => !analyzed.has(gameId))
+  const statusOf = (gameId: string): AnalysisStatus | null =>
+    analyzed.has(gameId)
+      ? "analyzed"
+      : queue.current?.gameId === gameId
+        ? "analyzing"
+        : queue.pending.includes(gameId)
+          ? "queued"
+          : null
 
   return (
     <>
@@ -96,10 +114,12 @@ export function GameLibrary({ platform, username }: { platform: Platform; userna
         </div>
       </header>
 
+      {games.length > 0 && <AnalysisProgress gameIds={gameIds} unanalyzedIds={unanalyzedIds} queue={queue} />}
+
       {games.length > 0 ? (
         <ul className="flex flex-col divide-y rounded-xl bg-card ring-1 ring-foreground/10">
           {games.map((game) => (
-            <GameCard key={game.id} game={game} />
+            <GameCard key={game.id} game={game} analysis={statusOf(game.id)} />
           ))}
         </ul>
       ) : (

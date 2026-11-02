@@ -46,6 +46,35 @@ export interface Game {
   clocks: number[] | null
 }
 
+/**
+ * A position's evaluation, always from white's point of view, so a whole
+ * game reads as one curve no matter whose turn it is.
+ */
+export type Eval =
+  | { kind: "cp"; cp: number }
+  /** > 0: white mates in n; < 0: black mates in n */
+  | { kind: "mate"; moves: number }
+  /** The position on the board is already checkmate */
+  | { kind: "checkmate"; winner: Color }
+
+export interface PositionEval {
+  /** Position key, see lib/chess/positionKey.ts */
+  key: string
+  depth: number
+  eval: Eval
+  /** Best move in UCI notation (e2e4), null when the game is over */
+  best: string | null
+  /** Principal variation in UCI notation, starting with `best` */
+  pv: string[]
+}
+
+/** Marks a game whose every position has an eval at `depth` or deeper. */
+export interface GameAnalysis {
+  gameId: string
+  depth: number
+  completedAt: number
+}
+
 export interface Account {
   /** Same format as Game.account */
   id: string

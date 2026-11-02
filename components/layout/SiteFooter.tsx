@@ -13,7 +13,11 @@ export function SiteFooter() {
         >
           Stockfish
         </a>{" "}
-        (GPLv3).
+        (
+        <a href="/stockfish/COPYING.txt" className="underline underline-offset-4 hover:text-foreground">
+          GPLv3
+        </a>
+        ).
       </div>
     </footer>
   )

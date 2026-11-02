@@ -6,11 +6,16 @@ import { useLiveQuery } from "dexie-react-hooks"
 import { ArrowLeft, ExternalLink } from "lucide-react"
 
 import { BoardControls } from "@/components/board/BoardControls"
+import { EngineLine } from "@/components/board/EngineLine"
+import { EvalBar } from "@/components/board/EvalBar"
+import { EvalGraph } from "@/components/board/EvalGraph"
 import { MoveList } from "@/components/board/MoveList"
 import { PlayerBar } from "@/components/board/PlayerBar"
 import { ReviewBoard } from "@/components/board/ReviewBoard"
 import { clocksAt, replayMoves } from "@/lib/chess/positions"
 import { db } from "@/lib/db/schema"
+import { useAnalysisQueue } from "@/lib/engine/useAnalysisQueue"
+import { useGameEvals } from "@/lib/engine/useGameEvals"
 import { formatOutcome, formatScore, formatTimeControl, SPEED_LABELS } from "@/lib/format"
 import { PLATFORM_LABELS } from "@/lib/sources/normalize"
 import type { Color, Game } from "@/lib/types"
@@ -30,6 +35,9 @@ function Review({ game }: { game: Game }) {
   const lastPly = positions.length - 1
   const [ply, setPly] = useState(0)
   const [orientation, setOrientation] = useState<Color>(game.userColor)
+  const evals = useGameEvals(game.id, positions)
+  const queue = useAnalysisQueue()
+  const progress = queue.current?.gameId === game.id ? queue.current : null
 
   const select = (target: number) => setPly(Math.max(0, Math.min(lastPly, target)))
   const flip = () => setOrientation((o) => (o === "white" ? "black" : "white"))
@@ -98,7 +106,12 @@ function Review({ game }: { game: Game }) {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,34rem)_minmax(18rem,1fr)] lg:items-start">
         <div className="flex flex-col gap-1">
           {bar(orientation === "white" ? "black" : "white")}
-          <ReviewBoard position={positions[ply]} orientation={orientation} />
+          <div className="flex gap-2">
+            <EvalBar evaluation={evals?.[ply]?.eval} orientation={orientation} />
+            <div className="min-w-0 flex-1">
+              <ReviewBoard position={positions[ply]} orientation={orientation} />
+            </div>
+          </div>
           {bar(orientation)}
           {/* On phones the controls sit under the board; on desktop, under the move list */}
           <div className="pt-2 lg:hidden">{controls}</div>
@@ -119,6 +132,9 @@ function Review({ game }: { game: Game }) {
               {PLATFORM_LABELS[game.platform]} <ExternalLink className="size-3.5" aria-hidden />
             </a>
           </div>
+
+          <EngineLine fen={positions[ply].fen} entry={evals?.[ply]} progress={progress} error={queue.error} />
+          {evals && <EvalGraph evals={evals} ply={ply} onSelect={select} />}
 
           <MoveList
             positions={positions}

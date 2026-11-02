@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ExternalLink } from "lucide-react"
+import { CircleCheck, Clock, ExternalLink, LoaderCircle } from "lucide-react"
 
 import { formatRelative, formatTimeControl, moveCount, SPEED_LABELS } from "@/lib/format"
 import { PLATFORM_LABELS } from "@/lib/sources/normalize"
@@ -11,14 +11,23 @@ const RESULT_STYLES: Record<Result, { label: string; className: string }> = {
   draw: { label: "D", className: "bg-muted text-muted-foreground" },
 }
 
+export type AnalysisStatus = "analyzed" | "analyzing" | "queued"
+
+const ANALYSIS_ICONS: Record<AnalysisStatus, { icon: typeof Clock; label: string; className: string }> = {
+  analyzed: { icon: CircleCheck, label: "Analyzed", className: "text-best" },
+  analyzing: { icon: LoaderCircle, label: "Analyzing", className: "animate-spin text-primary" },
+  queued: { icon: Clock, label: "Queued for analysis", className: "text-muted-foreground" },
+}
+
 /**
  * One row of the game list. The opponent link stretches over the whole row
  * (after:inset-0), so the row is clickable without nesting the external link
  * inside another link, which HTML doesn't allow.
  */
-export function GameCard({ game }: { game: Game }) {
+export function GameCard({ game, analysis }: { game: Game; analysis: AnalysisStatus | null }) {
   const opponent = game.userColor === "white" ? game.black : game.white
   const result = RESULT_STYLES[game.result]
+  const status = analysis && ANALYSIS_ICONS[analysis]
 
   return (
     <li className="relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-4 py-3 transition-colors hover:bg-muted/50 sm:grid-cols-[auto_minmax(0,1fr)_minmax(0,1.2fr)_auto]">
@@ -61,6 +70,10 @@ export function GameCard({ game }: { game: Game }) {
             {SPEED_LABELS[game.speed]} {formatTimeControl(game.timeControl)} · {moveCount(game)} moves
           </span>
           <span>{formatRelative(game.playedAt)}</span>
+        </span>
+        {/* Fixed-width slot so rows line up whether or not a game is analyzed */}
+        <span className="flex size-4 items-center justify-center" title={status?.label}>
+          {status && <status.icon className={`size-4 ${status.className}`} aria-label={status.label} />}
         </span>
         {/* relative z-10 lifts it above the stretched row link */}
         <a
