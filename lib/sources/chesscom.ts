@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from "@/lib/zod"
 
 import { parsePgnClocks, pgnHeader, pgnMoves } from "@/lib/chess/pgn"
 import type { Color, Game, Speed, Termination } from "@/lib/types"

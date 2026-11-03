@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { StorageWarning } from "@/components/layout/StorageWarning";
-import { site } from "@/lib/site";
+import { site, siteUrl } from "@/lib/site";
 import "./globals.css";
 
 // globals.css maps Tailwind's font-sans to --font-sans, so the variable name matters
@@ -17,11 +17,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Link previews need absolute URLs: the production domain on Vercel, localhost otherwise
-const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
-  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  : "http://localhost:3000";
-
+// Link previews need absolute URLs, so metadata resolves relative ones against siteUrl
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {

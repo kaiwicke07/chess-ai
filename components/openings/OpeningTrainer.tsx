@@ -87,10 +87,13 @@ export function OpeningTrainer() {
   }
   if (!account || !data) {
     return (
-      <div className="flex flex-col items-start gap-4 rounded-xl p-6 ring-1 ring-foreground/10">
-        <BookOpen className="size-6 text-primary" aria-hidden />
-        <p className="text-sm text-muted-foreground">Import an account first; the opening tree is built from its games.</p>
-        <RecentAccounts />
+      <div className="flex flex-col gap-6">
+        <h1 className="text-3xl font-semibold tracking-tight">Openings</h1>
+        <div className="flex flex-col items-start gap-4 rounded-xl p-6 ring-1 ring-foreground/10">
+          <BookOpen className="size-6 text-primary" aria-hidden />
+          <p className="text-sm text-muted-foreground">Import an account first; the opening tree is built from its games.</p>
+          <RecentAccounts />
+        </div>
       </div>
     )
   }

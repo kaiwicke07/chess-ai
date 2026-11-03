@@ -56,7 +56,7 @@ const FEATURES: { icon: LucideIcon; title: string; body: string; href: string }[
 ]
 
 /** A public account to try the app with, for visitors without their own */
-const DEMO = { platform: "lichess", username: "penguingim1", label: "GM Andrew Tang on Lichess" }
+const DEMO = { platform: "lichess", username: "penguingim1", label: "a grandmaster's public Lichess games (penguingim1)" }
 
 export default function Home() {
   return (
@@ -110,9 +110,9 @@ function ExampleReview() {
   ]
 
   return (
-    <Card aria-label="Example game review" className="w-full">
+    <Card aria-label="Example analysis" className="w-full">
       <CardHeader>
-        <CardTitle className="text-sm text-muted-foreground">Example review</CardTitle>
+        <CardTitle className="text-sm text-muted-foreground">Example analysis</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <ol className="grid grid-cols-[2.5rem_5rem_5rem] gap-y-1 font-mono text-sm">

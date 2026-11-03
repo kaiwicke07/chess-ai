@@ -106,6 +106,9 @@ npx next typegen   # regenerate route types after adding routes
 - **In-app Browser pane testing:** the pane hides itself again between turns. While the pane is hidden, `requestAnimationFrame` never fires, so a full page reload won't hydrate and Suspense content isn't revealed. Show the pane (`mcp__ccd_view__show_pane` with `preview`) before testing, or navigate client-side from `/`.
 - **PowerShell `ConvertTo-Json`/`Set-Content`** writes a BOM and reformats JSON, which broke `package.json` once. Edit JSON with a Node one-liner instead.
 - **Browser-tool scripts time out after 45 s.** For long background work, start it, then poll in short calls. A full page load kills the queue's worker, so keep background work running by navigating client-side (header nav, links).
+- **Zod 4 probes for `eval`** (`new Function("")`), which the production CSP reports as a violation. Import `z` from `@/lib/zod`, which sets `z.config({ jitless: true })`, never straight from `"zod"`.
+- **Test the CSP on a production build** (`npm run build`, then `npx next start -p 3100`), since it isn't sent in dev. Stop `next start` before rebuilding, or it keeps serving the stale build.
+- **Every page needs an `h1`, including its empty states.** Browser tests use it to tell a rendered page from a crash.
 - **Measured engine speed (depth 14):** about 115 ms per position in Node and about 200 ms in the browser, so 10–30 s per game. A 158-ply game took about 35 s.
 
 ## Phase plan and progress
@@ -348,6 +351,13 @@ The spec's "wrong move = Again" was read as a failed attempt, since a retry is a
 
 **Header:** on phones the logo text is hidden and links get `px-2`. Three links had overflowed 375px since Phase 9.
 
+**Legal and deploy pass (after Phase 10):**
+- **License:** `LICENSE` is the AGPL-3.0 text; `package.json` says `AGPL-3.0-or-later`. The footer and `/about#license` link the source, which the AGPL's network clause requires.
+- **Legal pages:** `/privacy` and `/terms` share `components/layout/LegalPage.tsx`; the date comes from `site.legalUpdated` in `lib/site.ts`, so bump it when either page changes. They are reasonable boilerplate, not lawyer-reviewed.
+- **Non-affiliation:** the footer and terms state the site isn't affiliated with Lichess or Chess.com, which Chess.com's terms require. Don't use Chess.com's "Game Review" name or its classification glyphs.
+- **Security headers** in `next.config.ts` apply to every path. The CSP is production-only, because dev needs eval for HMR. It needs `'wasm-unsafe-eval'` for Stockfish and `connect-src` for lichess.org and api.chess.com; add any new API host there.
+- `app/robots.ts` keeps `/u/`, `/review/` and `/play/` out of search engines (they show other people's games and render nothing without local data). `app/sitemap.ts` lists the static pages.
+
 **Dropped from the plan:** the "quick vs deep analysis toggle". It would break Phase 3's one-depth rule that keeps evals, judgements and progress stats comparable, and would force re-analysis because completion is keyed on depth.
 
 ### Later phases (design already agreed)
@@ -382,7 +392,8 @@ The spec's "wrong move = Again" was read as a failed attempt, since a retry is a
 
 ## Open notes
 
-- **No LICENSE file yet.** The site serves GPL-3.0 Stockfish files (unmodified, with their license and a source link). The move-judgement and accuracy logic is ported from Lichess (AGPL-3.0). The owner should pick a license; AGPL-3.0 is the conservative choice given the port.
+- **Licensed AGPL-3.0-or-later**, because the move-judgement and accuracy logic is ported from Lichess (AGPL-3.0). The Stockfish files are GPL-3.0, served unmodified with their license and an exact source link.
+- **`npm audit` findings are all in dev tooling** (as of November 2026). Its suggested fixes are major downgrades (eslint@4, shadcn@1), so they were not applied.
 - **Vercel isn't connected yet.** The repo is on GitHub at `kaiwicke07/chess-ai`. A fresh-clone production build was verified to restore and serve the engine.
 
 - The name "chess.ai" is a placeholder (it no longer uses AI). It's defined only in `lib/site.ts`.

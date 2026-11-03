@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from "@/lib/zod"
 
 import type { Color, Game, Player, Speed, Termination } from "@/lib/types"
 import { readNdjson } from "./ndjson"

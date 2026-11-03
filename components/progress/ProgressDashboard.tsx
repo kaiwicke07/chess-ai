@@ -89,10 +89,13 @@ export function ProgressDashboard() {
   if (accounts === undefined || !now) return <div className="h-96 animate-pulse rounded-xl bg-muted" aria-hidden />
   if (!account) {
     return (
-      <div className="flex flex-col items-start gap-4 rounded-xl p-6 ring-1 ring-foreground/10">
-        <TrendingUp className="size-6 text-primary" aria-hidden />
-        <p className="text-sm text-muted-foreground">Import an account first; progress is measured from its games.</p>
-        <RecentAccounts />
+      <div className="flex flex-col gap-6">
+        <h1 className="text-3xl font-semibold tracking-tight">Progress</h1>
+        <div className="flex flex-col items-start gap-4 rounded-xl p-6 ring-1 ring-foreground/10">
+          <TrendingUp className="size-6 text-primary" aria-hidden />
+          <p className="text-sm text-muted-foreground">Import an account first; progress is measured from its games.</p>
+          <RecentAccounts />
+        </div>
       </div>
     )
   }

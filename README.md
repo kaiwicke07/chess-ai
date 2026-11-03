@@ -8,7 +8,7 @@ It costs nothing to run: no server-side data, no accounts, no paid APIs, no lang
 
 | | |
 |---|---|
-| **Game review** | Step through any game with an eval bar, an eval graph, Stockfish's best line, and `?!` / `?` / `??` on inaccuracies, mistakes and blunders |
+| **Game analysis** | Step through any game with an eval bar, an eval graph, Stockfish's best line, and `?!` / `?` / `??` on inaccuracies, mistakes and blunders |
 | **Explanations** | One-sentence notes built from what the engine's lines show when replayed: *"This hangs the bishop on e6 to Bxe6."* |
 | **Accuracy** | Per-player accuracy with Lichess's formula |
 | **Puzzles** | Positions before your mistakes, kept only when one move is clearly best; up to three moves long, tagged by theme |
@@ -76,8 +76,18 @@ lib/db/         Dexie schema and backups
 tests/          Vitest suites, including real-game fixtures
 ```
 
+## License
+
+Copyright © 2026 kaiwicke07.
+
+This program is free software: you can redistribute it and/or modify it under the terms of the [GNU Affero General Public License](LICENSE) as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. It is distributed in the hope that it will be useful, but **without any warranty**; see the license for details.
+
+The AGPL means that anyone running a modified copy as a public website must also offer its source code. The site links to this repository in its footer for that reason.
+
+**Not affiliated with Lichess or Chess.com.** This is an independent project that reads public game data through their public APIs; their names are trademarks of their respective owners. See the site's [privacy policy](app/privacy/page.tsx) and [terms](app/terms/page.tsx).
+
 ## Credits and licenses
 
-- [Stockfish](https://github.com/official-stockfish/Stockfish) (GPL-3.0), via the [stockfish.js](https://github.com/nmrugg/stockfish.js) WebAssembly build (GPL-3.0). `npm install` copies the unmodified engine and its license into `public/stockfish/` (see `scripts/copy-stockfish.mjs`), so the binary isn't committed.
+- [Stockfish](https://github.com/official-stockfish/Stockfish) (GPL-3.0), via the [stockfish.js 19.0.1](https://github.com/nmrugg/stockfish.js/releases/tag/v19.0.1) WebAssembly build (GPL-3.0). `npm install` copies the unmodified engine and its license into `public/stockfish/` (see `scripts/copy-stockfish.mjs`), so the binary isn't committed.
 - Win-chance, accuracy and move-judgement formulas follow [Lichess](https://github.com/lichess-org/lila) (AGPL-3.0).
 - [chess.js](https://github.com/jhlywa/chess.js) (BSD-2-Clause), [react-chessboard](https://github.com/Clariity/react-chessboard) (MIT), [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs) (MIT), [Dexie](https://github.com/dexie/Dexie.js) (Apache-2.0), [Recharts](https://github.com/recharts/recharts) (MIT), [Lucide](https://github.com/lucide-icons/lucide) (ISC).

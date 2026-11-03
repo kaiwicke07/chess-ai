@@ -188,21 +188,24 @@ export function PuzzleTrainer() {
 
 function NoPuzzles({ analyzing }: { analyzing: boolean }) {
   return (
-    <div className="flex flex-col items-start gap-4 rounded-xl p-6 ring-1 ring-foreground/10">
-      <PuzzleIcon className="size-6 text-primary" aria-hidden />
-      <div className="flex flex-col gap-1">
-        <p className="font-medium">No puzzles yet</p>
-        <p className="text-sm text-muted-foreground">
-          Puzzles come from your own mistakes and blunders. Open an account and analyze its games; each game is checked
-          for positions with one clearly best move.
-        </p>
+    <div className="flex flex-col gap-6">
+      <h1 className="text-3xl font-semibold tracking-tight">Puzzles</h1>
+      <div className="flex flex-col items-start gap-4 rounded-xl p-6 ring-1 ring-foreground/10">
+        <PuzzleIcon className="size-6 text-primary" aria-hidden />
+        <div className="flex flex-col gap-1">
+          <p className="font-medium">No puzzles yet</p>
+          <p className="text-sm text-muted-foreground">
+            Puzzles come from your own mistakes and blunders. Open an account and analyze its games; each game is
+            checked for positions with one clearly best move.
+          </p>
+        </div>
+        {analyzing && (
+          <p className="flex items-center gap-2 text-sm" role="status">
+            <Cpu className="size-4 animate-pulse text-primary" aria-hidden /> Analysis is running…
+          </p>
+        )}
+        <RecentAccounts />
       </div>
-      {analyzing && (
-        <p className="flex items-center gap-2 text-sm" role="status">
-          <Cpu className="size-4 animate-pulse text-primary" aria-hidden /> Analysis is running…
-        </p>
-      )}
-      <RecentAccounts />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 
 import { DataPanel } from "@/components/settings/DataPanel"
 import { site } from "@/lib/site"
@@ -11,15 +12,15 @@ const STEPS = [
   ["Judge", "Moves are flagged as inaccuracies, mistakes or blunders with Lichess's own rules, ported and tested against Lichess's results."],
   ["Explain", "Explanations are templates filled with what Stockfish's lines actually show when replayed. No language model is involved."],
   ["Practice", "Your mistakes become puzzles and opening drills, scheduled with FSRS spaced repetition so misses come back sooner."],
-  ["Replay", "From any game review, replay a lost game from its turning point against Stockfish at a strength you choose."],
+  ["Replay", "From any analyzed game, replay a loss from its turning point against Stockfish at a strength you choose."],
   ["Track", "The Progress page shows accuracy, blunder rate and puzzle results week by week, and where your errors cluster."],
 ] as const
 
 const CREDITS: { name: string; href: string; license: string; note: string }[] = [
   { name: "Stockfish", href: site.stockfishSource, license: "GPL-3.0", note: "The chess engine." },
   {
-    name: "stockfish.js",
-    href: "https://github.com/nmrugg/stockfish.js",
+    name: "stockfish.js 19.0.1",
+    href: site.stockfishJsSource,
     license: "GPL-3.0",
     note: "Stockfish compiled to WebAssembly; the exact files served here, with their license.",
   },
@@ -89,11 +90,37 @@ export default function AboutPage() {
           ))}
         </ul>
         <p className="text-sm text-muted-foreground">
-          The Stockfish engine files served by this site are unmodified and come with their{" "}
+          The Stockfish engine files served by this site are the unmodified stockfish.js 19.0.1 release and come with
+          their{" "}
           <a href="/stockfish/COPYING.txt" className="underline underline-offset-4 hover:text-foreground">
             GPLv3 license
           </a>
-          ; their source is linked above.
+          ; their exact source is linked above.
+        </p>
+      </section>
+
+      <section aria-labelledby="license" className="flex flex-col gap-3">
+        <h2 id="license" className="text-xl font-semibold">
+          License and source
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {site.name} itself is free software under the{" "}
+          <a href="https://www.gnu.org/licenses/agpl-3.0.html" className="underline underline-offset-4 hover:text-foreground">
+            GNU AGPL v3.0
+          </a>{" "}
+          or later. Its complete source code is at{" "}
+          <a href={site.sourceUrl} className="underline underline-offset-4 hover:text-foreground">
+            github.com/kaiwicke07/chess-ai
+          </a>
+          . It is an independent project, not affiliated with or endorsed by Lichess or Chess.com. See also the{" "}
+          <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">
+            privacy policy
+          </Link>{" "}
+          and{" "}
+          <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">
+            terms of use
+          </Link>
+          .
         </p>
       </section>
     </div>
