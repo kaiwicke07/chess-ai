@@ -29,7 +29,7 @@ export function UsernameForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full max-w-md flex-col gap-3" noValidate>
+    <form onSubmit={handleSubmit} className="flex w-full max-w-lg flex-col gap-3" noValidate>
       <ToggleGroup
         value={[platform]}
         // Single-select group: clicking the pressed item sends [], which we ignore
@@ -60,9 +60,9 @@ export function UsernameForm() {
           aria-describedby="username-message"
           autoComplete="off"
           spellCheck={false}
-          className="h-10"
+          className="h-11 rounded-lg bg-card px-3.5 text-base"
         />
-        <Button type="submit" size="lg" className="h-10 px-4">
+        <Button type="submit" size="lg" className="h-11 rounded-lg px-5 text-[0.95rem] font-semibold">
           Analyze my games
         </Button>
       </div>

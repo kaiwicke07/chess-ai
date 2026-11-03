@@ -25,27 +25,35 @@ export function MoveFeedback({
   if (!judgement) {
     if (!assessment.best) return null
     return (
-      <div className="border-t px-4 py-3 text-sm">
-        <span className="font-medium text-best">{san} is the best move</span>
+      <div className="border-b px-4 py-3 text-sm">
+        <span className="font-semibold text-best">
+          <span className="font-mono">{san}</span> is the best move
+        </span>
         <span className="text-muted-foreground"> · Stockfish&apos;s top choice</span>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-1 border-t px-4 py-3 text-sm" role="status">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className={`font-medium ${JUDGEMENT_TEXT[judgement]}`}>
-          {san}
-          {JUDGEMENT_GLYPHS[judgement]} {JUDGEMENT_LABELS[judgement]}
+    <div className="flex flex-col gap-1.5 border-b px-4 py-3 text-sm" role="status">
+      {/* The verdict is the panel's headline: the move in mono, the judgement in display caps */}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <span className={`flex items-baseline gap-2 ${JUDGEMENT_TEXT[judgement]}`}>
+          <span className="font-mono text-base font-bold">
+            {san}
+            {JUDGEMENT_GLYPHS[judgement]}
+          </span>{" "}
+          <span className="font-display text-2xl">{JUDGEMENT_LABELS[judgement]}</span>
         </span>
-        {winDrop > 0 && <span className="text-xs text-muted-foreground tabular-nums">−{winDrop}% win chance</span>}
+        {winDrop > 0 && (
+          <span className="font-mono text-xs text-muted-foreground tabular-nums">−{winDrop}% win chance</span>
+        )}
       </div>
       {explanation && <p className="text-pretty">{explanation}</p>}
       {puzzleId && (
         <Link
           href={`/puzzles#${encodeURIComponent(puzzleId)}`}
-          className="mt-1 flex w-fit items-center gap-1.5 text-primary underline-offset-4 hover:underline"
+          className="mt-1 flex w-fit items-center gap-1.5 text-xs font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-primary"
         >
           <Puzzle className="size-4" aria-hidden /> Practice this position
         </Link>

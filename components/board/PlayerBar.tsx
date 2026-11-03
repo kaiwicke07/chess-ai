@@ -19,16 +19,18 @@ export function PlayerBar({
     <div className="flex items-center justify-between gap-3 py-1">
       <div className="flex min-w-0 items-center gap-2">
         <span
-          className={`size-3 shrink-0 rounded-sm ${color === "white" ? "bg-white" : "bg-neutral-950 ring-1 ring-neutral-300"}`}
+          className={`size-3 shrink-0 rounded-full ring-1 ring-foreground/30 ${color === "white" ? "bg-neutral-100" : "bg-neutral-900"}`}
           aria-label={color}
         />
-        <span className="truncate font-medium">{player.name}</span>
-        {player.rating !== null && <span className="text-sm text-muted-foreground">{player.rating}</span>}
-        {isUser && <span className="text-xs text-muted-foreground">(you)</span>}
+        <span className="truncate font-semibold">{player.name}</span>
+        {player.rating !== null && (
+          <span className="font-mono text-sm text-muted-foreground tabular-nums">{player.rating}</span>
+        )}
+        {isUser && <span className="text-xs font-semibold text-muted-foreground">(you)</span>}
       </div>
       {clock !== null && (
         <span
-          className={`rounded-md px-2 py-0.5 font-mono text-sm tabular-nums ${toMove ? "bg-foreground text-background" : "bg-muted text-muted-foreground"}`}
+          className={`px-2 py-0.5 font-mono text-sm font-semibold tabular-nums ${toMove ? "bg-ink text-ink-foreground" : "bg-muted text-foreground"}`}
         >
           {formatClock(clock)}
         </span>

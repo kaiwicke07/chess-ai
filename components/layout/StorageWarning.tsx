@@ -19,9 +19,10 @@ export function StorageWarning() {
 
   if (!blocked) return null
   return (
-    <div role="alert" className="border-b border-mistake/30 bg-mistake/10">
-      <p className="mx-auto flex w-full max-w-6xl items-start gap-2 px-4 py-3 text-sm sm:px-6">
-        <TriangleAlert className="mt-0.5 size-4 shrink-0 text-mistake" aria-hidden />
+    // A flat tinted field across the page, closed by an ink rule like a printed notice band
+    <div role="alert" className="border-b border-border bg-blunder/10">
+      <p className="mx-auto flex w-full max-w-6xl items-start gap-2 px-4 py-3 text-sm font-medium sm:px-6">
+        <TriangleAlert className="mt-0.5 size-4 shrink-0 text-blunder" aria-hidden />
         This browser is blocking local storage, which this app needs to keep your games and progress. Private browsing
         or strict privacy settings usually cause this; try a normal window.
       </p>

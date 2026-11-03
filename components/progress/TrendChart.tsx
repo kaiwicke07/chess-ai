@@ -4,6 +4,10 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 
 const weekLabel = (week: number) => new Date(week).toLocaleDateString(undefined, { month: "short", day: "numeric" })
 
+// Axis figures are data, so they're set in the mono face like every other number.
+// The variable comes from next/font in the layout; JS can't use Tailwind's font-mono.
+const tick = { fill: "var(--muted-foreground)", fontSize: 11, fontFamily: "var(--font-mono-face), monospace" }
+
 /**
  * One weekly measure as a single-series area chart: a 2px line over a faint
  * wash, gaps where a week has no data, a hairline grid, and a crosshair
@@ -28,12 +32,15 @@ export function TrendChart({
   const latest = [...data].reverse().find((d) => d.value !== null)
 
   return (
-    <figure className="flex flex-col gap-2 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+    // Printed straight on the paper under a single ink rule, like a chart in a
+    // magazine column; the section heading above carries the heavy rule
+    <figure className="flex min-w-0 flex-col gap-2 border-t border-border pt-3">
       <figcaption className="flex items-baseline justify-between gap-3">
-        <span className="text-sm font-medium">{title}</span>
+        <span className="text-sm font-semibold">{title}</span>
         {latest && (
-          <span className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{format(latest.value!)}</span> week of {weekLabel(latest.week)}
+          <span className="text-xs text-muted-foreground">
+            <span className="font-mono text-sm font-semibold text-foreground">{format(latest.value!)}</span> week of{" "}
+            {weekLabel(latest.week)}
           </span>
         )}
       </figcaption>
@@ -51,29 +58,29 @@ export function TrendChart({
               scale="time"
               domain={["dataMin", "dataMax"]}
               tickFormatter={weekLabel}
-              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+              tick={tick}
               tickLine={false}
-              axisLine={{ stroke: "var(--border)" }}
+              axisLine={{ stroke: "var(--ink)" }}
               minTickGap={24}
             />
             <YAxis
               domain={domain ?? [0, "auto"]}
               tickFormatter={(v: number) => format(v)}
-              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+              tick={tick}
               tickLine={false}
               axisLine={false}
               width={40}
               tickCount={4}
             />
             <Tooltip
-              cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1 }}
+              cursor={{ stroke: "var(--ink)", strokeWidth: 1 }}
               content={({ active, payload }) => {
                 const point = payload?.[0]?.payload as { week: number; value: number | null } | undefined
                 if (!active || !point) return null
                 return (
-                  <div className="rounded-md bg-popover px-2.5 py-1.5 text-xs shadow-md ring-1 ring-foreground/10">
-                    <p className="font-semibold text-foreground">{point.value === null ? "No data" : format(point.value)}</p>
-                    <p className="text-muted-foreground">Week of {weekLabel(point.week)}</p>
+                  <div className="bg-ink px-2.5 py-1.5 text-xs text-ink-foreground">
+                    <p className="font-mono font-semibold">{point.value === null ? "No data" : format(point.value)}</p>
+                    <p className="opacity-80">Week of {weekLabel(point.week)}</p>
                   </div>
                 )
               }}
@@ -101,10 +108,10 @@ export function TrendChart({
                   return <g key={index} />
                 }
                 return (
-                  <circle key={index} cx={cx} cy={cy} r={4} fill="var(--chart-series)" stroke="var(--card)" strokeWidth={2} />
+                  <circle key={index} cx={cx} cy={cy} r={4} fill="var(--chart-series)" stroke="var(--background)" strokeWidth={2} />
                 )
               }}
-              activeDot={{ r: 4, fill: "var(--chart-series)", stroke: "var(--card)", strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: "var(--chart-series)", stroke: "var(--background)", strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>

@@ -84,19 +84,23 @@ export function GameLibrary({ platform, username }: { platform: Platform; userna
   return (
     <>
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight">{me?.name ?? username}</h1>
-            <Badge variant="outline">{PLATFORM_LABELS[platform]}</Badge>
+        <div className="flex min-w-0 flex-col gap-3">
+          <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+            <h1 className="page-title min-w-0 break-words">{me?.name ?? username}</h1>
+            <Badge variant="outline" className="mb-1">
+              {PLATFORM_LABELS[platform]}
+            </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
-            {games.length} {games.length === 1 ? "game" : "games"}
+            <span className="font-mono tabular-nums">{games.length}</span> {games.length === 1 ? "game" : "games"}
             {games.length > 0 && (
               <>
                 {" · "}
-                <span className="text-best">{record.win}W</span>{" "}
-                <span>{record.draw}D</span>{" "}
-                <span className="text-blunder">{record.loss}L</span>
+                <span className="font-mono font-semibold tabular-nums">
+                  <span className="text-best">{record.win}W</span>{" "}
+                  <span className="text-foreground">{record.draw}D</span>{" "}
+                  <span className="text-blunder">{record.loss}L</span>
+                </span>
               </>
             )}
             {account && <> · synced {formatRelative(account.lastSyncedAt)}</>}
@@ -123,7 +127,8 @@ export function GameLibrary({ platform, username }: { platform: Platform; userna
       {games.length > 0 && <AnalysisProgress gameIds={gameIds} unanalyzedIds={unanalyzedIds} queue={queue} />}
 
       {games.length > 0 ? (
-        <ul className="flex flex-col divide-y rounded-xl bg-card ring-1 ring-foreground/10">
+        // A ruled index: a heavy ink rule opens the list, hairlines separate the games
+        <ul className="flex flex-col divide-y divide-border border-t-[3px] border-b border-border border-b-ink/20">
           {games.map((game) => (
             <GameCard key={game.id} game={game} analysis={statusOf(game.id)} />
           ))}
@@ -158,9 +163,12 @@ function SyncStatus({ sync, showError }: { sync: SyncState; showError: boolean }
 function EmptyState({ sync, platform, synced }: { sync: SyncState; platform: Platform; synced: boolean }) {
   if (sync.status === "error") {
     return (
-      <div role="alert" className="flex flex-col items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-6">
+      <div role="alert" className="flex flex-col items-start gap-3 border border-destructive/40 bg-destructive/10 p-6">
         <p className="text-destructive">{sync.message}</p>
-        <Link href="/" className="text-sm underline underline-offset-4">
+        <Link
+          href="/"
+          className="text-xs font-semibold underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-primary"
+        >
           Try another username
         </Link>
       </div>
@@ -171,7 +179,7 @@ function EmptyState({ sync, platform, synced }: { sync: SyncState; platform: Pla
   if (sync.status === "syncing" || (sync.status === "idle" && !synced)) return <GameListSkeleton header={false} />
 
   return (
-    <div className="rounded-xl p-6 text-muted-foreground ring-1 ring-foreground/10">
+    <div className="border-t border-border rounded-xl bg-card p-6 text-muted-foreground">
       No standard timed games found on {PLATFORM_LABELS[platform]}. Correspondence, daily and variant games are
       skipped.
     </div>

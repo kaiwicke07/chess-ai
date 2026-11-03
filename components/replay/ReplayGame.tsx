@@ -39,8 +39,11 @@ export function ReplayGame({ gameId }: { gameId: string }) {
   if (game === undefined) return <ReviewSkeleton />
   if (game === null) {
     return (
-      <p className="rounded-xl p-6 text-sm text-muted-foreground ring-1 ring-foreground/10">
-        This game isn&apos;t in this browser&apos;s library. <Link href="/" className="underline">Import games</Link>
+      <p className="border-t border-border rounded-xl bg-card p-6 text-sm text-muted-foreground ring-1 ring-foreground/10">
+        This game isn&apos;t in this browser&apos;s library.{" "}
+        <Link href="/" className="text-primary underline underline-offset-4 hover:decoration-2">
+          Import games
+        </Link>
       </p>
     )
   }
@@ -102,16 +105,16 @@ function Replay({ game }: { game: Game }) {
             <Button variant="outline" size="icon-lg" onClick={() => setChosenPly(Math.max(0, startPly - 1))} disabled={startPly === 0} aria-label="Start one move earlier">
               <ChevronLeft />
             </Button>
-            <span>{startLabel(startPly, positions[startPly].lastMove?.san)}</span>
+            <span className="text-center font-mono text-foreground tabular-nums">{startLabel(startPly, positions[startPly].lastMove?.san)}</span>
             <Button variant="outline" size="icon-lg" onClick={() => setChosenPly(Math.min(positions.length - 2, startPly + 1))} disabled={startPly >= positions.length - 2} aria-label="Start one move later">
               <ChevronRight />
             </Button>
           </div>
         </div>
 
-        <aside className="flex flex-col gap-5 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+        <aside className="flex min-w-0 flex-col gap-5 border-t border-border rounded-xl bg-card p-4 ring-1 ring-foreground/10">
           <div className="flex flex-col gap-1">
-            <h2 className="text-lg font-semibold">
+            <h2 className="section-title">
               {startPly === critical && chosenPly === null ? "Replay from the turning point" : "Replay from here"}
             </h2>
             <p className="text-sm text-muted-foreground">
@@ -134,7 +137,7 @@ function Replay({ game }: { game: Game }) {
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium">Opponent strength</span>
+            <span className="text-xs font-semibold">Opponent strength</span>
             <ToggleGroup
               value={[strengthId]}
               onValueChange={(value) => value[0] && setStrengthId(value[0])}
@@ -144,7 +147,7 @@ function Replay({ game }: { game: Game }) {
               aria-label="Opponent strength"
             >
               {STRENGTHS.map((s) => (
-                <ToggleGroupItem key={s.id} value={s.id} className="aria-pressed:border-primary/60 aria-pressed:text-foreground">
+                <ToggleGroupItem key={s.id} value={s.id}>
                   {s.label}
                 </ToggleGroupItem>
               ))}
@@ -171,15 +174,12 @@ function Replay({ game }: { game: Game }) {
 
 function Header({ game, opponentName, platform, sourceId }: { game: Game; opponentName: string; platform: string; sourceId: string }) {
   return (
-    <header className="flex flex-col gap-2">
-      <Link
-        href={`/review/${platform}/${sourceId}`}
-        className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
+    <header className="flex flex-col gap-3 border-b border-border pb-4">
+      <Link href={`/review/${platform}/${sourceId}`} className="flex w-fit items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary">
         <ArrowLeft className="size-4" aria-hidden /> Back to the review
       </Link>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Replay vs {opponentName}</h1>
+        <h1 className="page-title min-w-0 break-words">Replay vs {opponentName}</h1>
         <span className="text-sm text-muted-foreground">
           {formatOutcome(game)} · {new Date(game.playedAt).toLocaleDateString(undefined, { dateStyle: "medium" })}
         </span>
@@ -280,9 +280,9 @@ function Match({
           lastMove={last ? { from: last.slice(0, 2), to: last.slice(2, 4) } : null}
         />
 
-        <aside className="flex flex-col gap-4 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+        <aside className="flex min-w-0 flex-col gap-4 border-t border-border rounded-xl bg-card p-4 ring-1 ring-foreground/10">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-lg font-semibold" role="status">
+            <p className="font-display text-3xl" role="status">
               {outcome ? (
                 <span className={outcome.result === "win" ? "text-best" : outcome.result === "loss" ? "text-blunder" : ""}>
                   {OUTCOME_TITLE[outcome.result]}
@@ -295,11 +295,13 @@ function Match({
                 "Your move"
               )}
             </p>
-            <span className="text-xs text-muted-foreground">vs Stockfish {session.strength.label}</span>
+            <span className="shrink-0 text-right text-xs font-semibold text-muted-foreground">
+              vs Stockfish {session.strength.label}
+            </span>
           </div>
           {outcome && <p className="-mt-2 text-sm text-muted-foreground">By {outcome.reason}. In the real game: {formatOutcome(game).toLowerCase()}.</p>}
 
-          <p className="min-h-10 font-mono text-sm text-muted-foreground">
+          <p className="min-h-10 border-t border-border pt-3 font-mono text-sm text-foreground tabular-nums">
             {sans.length ? numberMoves(startFen, sans).join(" ") : "No moves yet"}
           </p>
 

@@ -25,18 +25,20 @@ export function AccuracySummary({
       {(["white", "black"] as const).map((color) => (
         <div key={color} className="flex items-center gap-2">
           <span
-            className={`size-3 shrink-0 rounded-sm ${color === "white" ? "bg-white" : "bg-neutral-950 ring-1 ring-neutral-300"}`}
+            className={`size-3 shrink-0 rounded-full ring-1 ring-foreground/30 ${color === "white" ? "bg-neutral-100" : "bg-neutral-900"}`}
             aria-label={color}
           />
           <span className="min-w-0 flex-1 truncate">
             {game[color].name}
-            {color === game.userColor && <span className="text-muted-foreground"> (you)</span>}
+            {color === game.userColor && (
+              <span className="text-xs font-semibold text-muted-foreground"> (you)</span>
+            )}
           </span>
-          <span className="flex gap-2 font-mono text-xs">
+          <span className="flex gap-2 font-mono text-xs tabular-nums">
             {ORDER.map((judgement) => (
               <span
                 key={judgement}
-                className={counts[color][judgement] ? JUDGEMENT_TEXT[judgement] : "text-muted-foreground/50"}
+                className={counts[color][judgement] ? `font-semibold ${JUDGEMENT_TEXT[judgement]}` : "text-muted-foreground"}
                 title={`${counts[color][judgement]} ${JUDGEMENT_LABELS[judgement].toLowerCase()}${counts[color][judgement] === 1 ? "" : "s"}`}
               >
                 {counts[color][judgement]}
@@ -44,7 +46,7 @@ export function AccuracySummary({
               </span>
             ))}
           </span>
-          <span className="w-16 text-right font-semibold tabular-nums" title="Accuracy (Lichess formula)">
+          <span className="w-16 text-right font-mono text-base font-bold tabular-nums" title="Accuracy (Lichess formula)">
             {accuracy[color] === null ? "–" : `${Math.round(accuracy[color]!)}%`}
           </span>
         </div>

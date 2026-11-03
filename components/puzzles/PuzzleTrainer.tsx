@@ -23,6 +23,11 @@ type Filter = PuzzleTheme | "all"
 type Entry = { puzzle: Puzzle; game: Game | undefined }
 type Saved = { due: number; grade: number; savedAt: number }
 
+// Filters and mode switches are rounded chips; the pressed one is tinted blue
+const SEGMENTS = "flex-wrap gap-1.5"
+const SEGMENT =
+  "h-8 rounded-full border border-border px-3.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-pressed:border-primary/50 aria-pressed:bg-primary/15 aria-pressed:text-foreground"
+
 /** Puzzle id from a link like /puzzles#lichess:abc:12 (set by the review page). */
 function idFromHash(): string | null {
   if (typeof window === "undefined") return null
@@ -54,7 +59,7 @@ export function PuzzleTrainer() {
   const [outcomes, setOutcomes] = useState<Record<string, SolveOutcome>>({})
   const [saved, setSaved] = useState<Record<string, Saved>>({})
 
-  if (data === undefined || now === 0) return <div className="h-96 animate-pulse rounded-xl bg-muted" aria-hidden />
+  if (data === undefined || now === 0) return <div className="h-96 animate-pulse bg-muted" aria-hidden />
   const { entries, cards, reviewedToday } = data
 
   if (!entries.length) return <NoPuzzles analyzing={!!queueState.current} />
@@ -98,11 +103,15 @@ export function PuzzleTrainer() {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-semibold tracking-tight">Puzzles</h1>
+        <div className="flex flex-col gap-3">
+          <h1 className="page-title">Puzzles</h1>
           <p className="text-sm text-muted-foreground">
-            <span className="text-foreground">{queue.due.length} due</span> · {queue.fresh.length} new left today ·{" "}
-            {reviewedToday} done today · {entries.length} in total
+            <span className="font-semibold text-foreground">
+              <span className="font-mono tabular-nums">{queue.due.length}</span> due
+            </span>{" "}
+            · <span className="font-mono tabular-nums">{queue.fresh.length}</span> new left today ·{" "}
+            <span className="font-mono tabular-nums">{reviewedToday}</span> done today ·{" "}
+            <span className="font-mono tabular-nums">{entries.length}</span> in total
           </p>
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">
@@ -113,18 +122,22 @@ export function PuzzleTrainer() {
               setMode(value[0] as Mode)
               setCurrentId(null)
             }}
-            variant="outline"
+            spacing={1.5}
+            className={SEGMENTS}
             aria-label="Practice mode"
           >
-            <ToggleGroupItem value="today" className="aria-pressed:border-primary/60 aria-pressed:text-foreground">
+            <ToggleGroupItem value="today" className={SEGMENT}>
               Today
             </ToggleGroupItem>
-            <ToggleGroupItem value="all" className="aria-pressed:border-primary/60 aria-pressed:text-foreground">
+            <ToggleGroupItem value="all" className={SEGMENT}>
               All puzzles
             </ToggleGroupItem>
           </ToggleGroup>
           {queueState.current && (
-            <p className="flex items-center gap-2 text-xs text-muted-foreground" role="status">
+            <p
+              className="flex items-center gap-2 text-xs font-semibold text-muted-foreground"
+              role="status"
+            >
               <Cpu className="size-3.5 animate-pulse text-primary" aria-hidden /> Finding more in the background
             </p>
           )}
@@ -150,8 +163,8 @@ export function PuzzleTrainer() {
 
       {mode === "today" ? (
         queueIds.length > 0 && (
-          <section aria-labelledby="up-next" className="flex flex-col gap-3">
-            <h2 id="up-next" className="text-lg font-semibold">
+          <section aria-labelledby="up-next" className="flex flex-col gap-4 border-t border-border pt-4">
+            <h2 id="up-next" className="section-title">
               Up next
             </h2>
             <PuzzleGrid
@@ -165,9 +178,9 @@ export function PuzzleTrainer() {
           </section>
         )
       ) : (
-        <section aria-labelledby="all-puzzles" className="flex flex-col gap-3">
+        <section aria-labelledby="all-puzzles" className="flex flex-col gap-4 border-t border-border pt-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 id="all-puzzles" className="text-lg font-semibold">
+            <h2 id="all-puzzles" className="section-title">
               All puzzles
             </h2>
             <ThemeFilter entries={entries} filter={filter} onChange={setFilter} />
@@ -189,18 +202,18 @@ export function PuzzleTrainer() {
 function NoPuzzles({ analyzing }: { analyzing: boolean }) {
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-semibold tracking-tight">Puzzles</h1>
-      <div className="flex flex-col items-start gap-4 rounded-xl p-6 ring-1 ring-foreground/10">
-        <PuzzleIcon className="size-6 text-primary" aria-hidden />
-        <div className="flex flex-col gap-1">
-          <p className="font-medium">No puzzles yet</p>
-          <p className="text-sm text-muted-foreground">
+      <h1 className="page-title">Puzzles</h1>
+      <div className="flex flex-col items-start gap-5 border-t border-border rounded-xl bg-card p-6 ring-1 ring-foreground/10">
+        <PuzzleIcon className="size-7 text-primary" aria-hidden />
+        <div className="flex flex-col gap-2">
+          <h2 className="font-display text-3xl">No puzzles yet</h2>
+          <p className="max-w-prose text-sm text-muted-foreground">
             Puzzles come from your own mistakes and blunders. Open an account and analyze its games; each game is
             checked for positions with one clearly best move.
           </p>
         </div>
         {analyzing && (
-          <p className="flex items-center gap-2 text-sm" role="status">
+          <p className="flex items-center gap-2 text-xs font-semibold" role="status">
             <Cpu className="size-4 animate-pulse text-primary" aria-hidden /> Analysis is running…
           </p>
         )}
@@ -212,14 +225,20 @@ function NoPuzzles({ analyzing }: { analyzing: boolean }) {
 
 function DoneForToday({ nextDue, now, onPractice }: { nextDue: number | null; now: number; onPractice: () => void }) {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-xl p-6 ring-1 ring-foreground/10 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col items-start gap-4 rounded-xl bg-card p-6 ring-1 ring-foreground/10 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-3">
-        <CalendarCheck className="mt-0.5 size-5 shrink-0 text-best" aria-hidden />
-        <div>
-          <p className="font-medium">That&apos;s everything for today</p>
+        <CalendarCheck className="mt-0.5 size-6 shrink-0 text-best" aria-hidden />
+        <div className="flex flex-col gap-2">
+          <h2 className="font-display text-3xl">That&apos;s everything for today</h2>
           <p className="text-sm text-muted-foreground">
-            {nextDue ? `Next review in ${formatInterval(nextDue, now)}.` : "No reviews scheduled yet."} Up to{" "}
-            {NEW_PER_DAY} new puzzles are added each day.
+            {nextDue ? (
+              <>
+                Next review in <span className="font-mono tabular-nums">{formatInterval(nextDue, now)}</span>.
+              </>
+            ) : (
+              "No reviews scheduled yet."
+            )}{" "}
+            Up to <span className="font-mono tabular-nums">{NEW_PER_DAY}</span> new puzzles are added each day.
           </p>
         </div>
       </div>
@@ -246,16 +265,18 @@ function ThemeFilter({
     <ToggleGroup
       value={[filter]}
       onValueChange={(value) => value[0] && onChange(value[0] as Filter)}
-      variant="outline"
-      size="sm"
-      className="flex-wrap"
+      spacing={1.5}
+      className={SEGMENTS}
       aria-label="Filter by theme"
     >
       {(["all", "mate", "fork", "hangingPiece", "material", "advantage", "defense"] as Filter[])
         .filter((f) => counts.get(f))
         .map((f) => (
-          <ToggleGroupItem key={f} value={f} className="aria-pressed:border-primary/60 aria-pressed:text-foreground">
-            {f === "all" ? "All" : THEME_LABELS[f]} <span className="text-muted-foreground">{counts.get(f)}</span>
+          <ToggleGroupItem key={f} value={f} className={`group/seg gap-2 ${SEGMENT}`}>
+            {f === "all" ? "All" : THEME_LABELS[f]}
+            <span className="font-mono font-normal text-muted-foreground tabular-nums group-aria-pressed/seg:text-ink-foreground/80">
+              {counts.get(f)}
+            </span>
           </ToggleGroupItem>
         ))}
     </ToggleGroup>
@@ -277,10 +298,12 @@ function PuzzleGrid({
   now: number
   onSelect: (id: string) => void
 }) {
+  // A 1px gap over an ink-tinted ground draws hairlines between the cells,
+  // like a ruled table, without doubling borders where cells meet
   return (
-    <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+    <ul className="grid gap-px bg-border ring-1 ring-foreground/10 sm:grid-cols-2 lg:grid-cols-3">
       {entries.map(({ puzzle, game }) => (
-        <li key={puzzle.id}>
+        <li key={puzzle.id} className="rounded-xl bg-card">
           <PuzzleItem
             puzzle={puzzle}
             game={game}
@@ -318,34 +341,45 @@ function PuzzleItem({
     .map((t) => (t === "mate" && puzzle.mateIn ? `Mate in ${puzzle.mateIn}` : THEME_LABELS[t]))
     .join(" · ")
   const schedule = !card ? "New" : card.due <= now ? "Due now" : `In ${formatInterval(card.due, now)}`
+  // On the ultramarine "current" field the schedule and result colors would
+  // fail contrast, so everything in the cell reverses to paper
+  const scheduleClass = active
+    ? "text-primary-foreground"
+    : !card
+      ? "text-primary"
+      : card.due <= now
+        ? "text-mistake"
+        : "text-muted-foreground"
 
   return (
     <button
       type="button"
       onClick={onSelect}
       aria-current={active ? "true" : undefined}
-      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm ring-1 transition-colors ${active ? "bg-primary/15 ring-primary/50" : "ring-foreground/10 hover:bg-muted/50"}`}
+      className={`flex h-full w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-colors outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary ${active ? "bg-primary text-primary-foreground focus-visible:outline-primary-foreground" : "hover:bg-muted"}`}
     >
       <span
-        className={`size-3 shrink-0 rounded-sm ${puzzle.color === "white" ? "bg-white" : "bg-neutral-950 ring-1 ring-neutral-300"}`}
+        className={`size-3 shrink-0 rounded-full ring-1 ${puzzle.color === "white" ? "bg-neutral-100" : "bg-neutral-900"} ${active ? "ring-primary-foreground" : "ring-foreground/30"}`}
         aria-label={`Play as ${puzzle.color}`}
       />
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate font-medium">{themes}</span>
-        <span className="truncate text-xs text-muted-foreground">
+        <span className="truncate font-semibold">{themes}</span>
+        <span className={`truncate text-xs ${active ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
           {opponent ? `vs ${opponent.name}` : "Game"}
           {game && ` · ${formatRelative(game.playedAt, now)}`}
         </span>
       </span>
-      <span
-        className={`shrink-0 text-xs ${!card ? "text-primary" : card.due <= now ? "text-mistake" : "text-muted-foreground"}`}
-      >
-        {schedule}
-      </span>
+      <span className={`shrink-0 font-mono text-xs tabular-nums ${scheduleClass}`}>{schedule}</span>
       {outcome === "failed" ? (
-        <CircleX className="size-4 shrink-0 text-blunder" aria-label="Missed this session" />
+        <CircleX
+          className={`size-4 shrink-0 ${active ? "text-primary-foreground" : "text-blunder"}`}
+          aria-label="Missed this session"
+        />
       ) : outcome ? (
-        <CircleCheck className="size-4 shrink-0 text-best" aria-label="Solved this session" />
+        <CircleCheck
+          className={`size-4 shrink-0 ${active ? "text-primary-foreground" : "text-best"}`}
+          aria-label="Solved this session"
+        />
       ) : null}
     </button>
   )

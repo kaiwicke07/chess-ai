@@ -30,6 +30,11 @@ const NEW_DRILLS_PER_DAY = 5
 type Mode = "drill" | "explore"
 type Saved = { due: number; grade: number; savedAt: number }
 
+// Filters and mode switches are rounded chips; the pressed one is tinted blue
+const SEGMENTS = "flex-wrap gap-1.5"
+const SEGMENT =
+  "h-8 rounded-full border border-border px-3.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground aria-pressed:border-primary/50 aria-pressed:bg-primary/15 aria-pressed:text-foreground"
+
 function playFen(fen: string, uci: string): string {
   const chess = new Chess(fen)
   chess.move({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] })
@@ -83,15 +88,20 @@ export function OpeningTrainer() {
   const stopScan = useRef(false)
 
   if (accounts === undefined || (account && data === undefined) || !now) {
-    return <div className="h-96 animate-pulse rounded-xl bg-muted" aria-hidden />
+    return <div className="h-96 animate-pulse bg-muted" aria-hidden />
   }
   if (!account || !data) {
     return (
       <div className="flex flex-col gap-6">
-        <h1 className="text-3xl font-semibold tracking-tight">Openings</h1>
-        <div className="flex flex-col items-start gap-4 rounded-xl p-6 ring-1 ring-foreground/10">
-          <BookOpen className="size-6 text-primary" aria-hidden />
-          <p className="text-sm text-muted-foreground">Import an account first; the opening tree is built from its games.</p>
+        <h1 className="page-title">Openings</h1>
+        <div className="flex flex-col items-start gap-5 border-t border-border rounded-xl bg-card p-6 ring-1 ring-foreground/10">
+          <BookOpen className="size-7 text-primary" aria-hidden />
+          <div className="flex flex-col gap-2">
+            <h2 className="font-display text-3xl">No games to read yet</h2>
+            <p className="max-w-prose text-sm text-muted-foreground">
+              Import an account first; the opening tree is built from its games.
+            </p>
+          </div>
           <RecentAccounts />
         </div>
       </div>
@@ -131,11 +141,15 @@ export function OpeningTrainer() {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-semibold tracking-tight">Openings</h1>
+        <div className="flex flex-col gap-3">
+          <h1 className="page-title">Openings</h1>
           <p className="text-sm text-muted-foreground">
-            {data.games} games as {color} · {spots.length} weak {spots.length === 1 ? "spot" : "spots"} ·{" "}
-            <span className="text-foreground">{queue.due.length} due</span> · {queue.fresh.length} new today
+            <span className="font-mono tabular-nums">{data.games}</span> games as {color} ·{" "}
+            <span className="font-mono tabular-nums">{spots.length}</span> weak {spots.length === 1 ? "spot" : "spots"} ·{" "}
+            <span className="font-semibold text-foreground">
+              <span className="font-mono tabular-nums">{queue.due.length}</span> due
+            </span>{" "}
+            · <span className="font-mono tabular-nums">{queue.fresh.length}</span> new today
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -147,7 +161,7 @@ export function OpeningTrainer() {
                 setCurrentId(null)
                 setFocus(null)
               }}
-              className="h-8 rounded-lg border border-input bg-input/30 px-2 text-sm"
+              className="h-8 max-w-full border border-border rounded-xl bg-card px-2 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               aria-label="Account"
             >
               {accounts.map((a) => (
@@ -165,11 +179,12 @@ export function OpeningTrainer() {
               setCurrentId(null)
               setFocus(null)
             }}
-            variant="outline"
+            spacing={1.5}
+            className={SEGMENTS}
             aria-label="Color"
           >
             {(["white", "black"] as const).map((c) => (
-              <ToggleGroupItem key={c} value={c} className="aria-pressed:border-primary/60 aria-pressed:text-foreground">
+              <ToggleGroupItem key={c} value={c} className={SEGMENT}>
                 As {c}
               </ToggleGroupItem>
             ))}
@@ -177,13 +192,14 @@ export function OpeningTrainer() {
           <ToggleGroup
             value={[mode]}
             onValueChange={(value) => value[0] && setMode(value[0] as Mode)}
-            variant="outline"
+            spacing={1.5}
+            className={SEGMENTS}
             aria-label="Mode"
           >
-            <ToggleGroupItem value="drill" className="aria-pressed:border-primary/60 aria-pressed:text-foreground">
+            <ToggleGroupItem value="drill" className={SEGMENT}>
               Drill
             </ToggleGroupItem>
-            <ToggleGroupItem value="explore" className="aria-pressed:border-primary/60 aria-pressed:text-foreground">
+            <ToggleGroupItem value="explore" className={SEGMENT}>
               Explore
             </ToggleGroupItem>
           </ToggleGroup>
@@ -191,18 +207,19 @@ export function OpeningTrainer() {
       </header>
 
       {(missing.length > 0 || scan) && (
-        <div className="flex flex-col gap-3 rounded-lg px-4 py-3 text-sm ring-1 ring-foreground/10 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col items-start gap-3 rounded-xl bg-card px-4 py-3 text-sm ring-1 ring-foreground/10 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-muted-foreground" role="status">
             {scan ? (
               <>
-                Analyzing opening positions · {scan.done} of {scan.total}
+                Analyzing opening positions · <span className="font-mono tabular-nums">{scan.done}</span> of{" "}
+                <span className="font-mono tabular-nums">{scan.total}</span>
               </>
             ) : (
               <>
-                {missing.length} opening {missing.length === 1 ? "position" : "positions"} you reach repeatedly
+                <span className="font-mono tabular-nums">{missing.length}</span> opening {missing.length === 1 ? "position" : "positions"} you reach repeatedly
                 {missing.length === 1 ? " isn't" : " aren't"} analyzed yet, so some weak spots may be missing. This takes
                 about {Math.max(1, Math.round((missing.length * 0.25) / 60))} min, or{" "}
-                <Link href={`/u/${account.platform}/${username}`} className="text-primary underline-offset-4 hover:underline">
+                <Link href={`/u/${account.platform}/${username}`} className="text-primary underline underline-offset-4 hover:decoration-2">
                   analyze whole games
                 </Link>{" "}
                 for puzzles too.
@@ -232,10 +249,10 @@ export function OpeningTrainer() {
           onNext={nextId ? () => setCurrentId(nextId) : null}
         />
       ) : (
-        <div className="flex items-start gap-3 rounded-xl p-6 ring-1 ring-foreground/10">
-          <CalendarCheck className="mt-0.5 size-5 shrink-0 text-best" aria-hidden />
-          <div>
-            <p className="font-medium">{spots.length ? "No drills due right now" : "No weak spots found yet"}</p>
+        <div className="flex items-start gap-3 rounded-xl bg-card p-6 ring-1 ring-foreground/10">
+          <CalendarCheck className="mt-0.5 size-6 shrink-0 text-best" aria-hidden />
+          <div className="flex flex-col gap-2">
+            <h2 className="font-display text-3xl">{spots.length ? "No drills due right now" : "No weak spots found yet"}</h2>
             <p className="text-sm text-muted-foreground">
               {spots.length
                 ? queue.nextDue
@@ -248,8 +265,8 @@ export function OpeningTrainer() {
       )}
 
       {spots.length > 0 && (
-        <section aria-labelledby="weak-spots" className="flex flex-col gap-3">
-          <h2 id="weak-spots" className="text-lg font-semibold">
+        <section aria-labelledby="weak-spots" className="flex flex-col gap-4 border-t border-border pt-4">
+          <h2 id="weak-spots" className="section-title">
             Weak spots as {color}
           </h2>
           <WeakSpotList

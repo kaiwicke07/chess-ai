@@ -10,9 +10,9 @@ const LINKS = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-6 text-sm text-muted-foreground sm:px-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <footer className="mt-16 border-t">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-muted-foreground sm:px-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p>
             Runs entirely in your browser. Analysis by{" "}
             <a href={site.stockfishSource} className="underline underline-offset-4 hover:text-foreground" target="_blank" rel="noopener noreferrer">
@@ -24,7 +24,7 @@ export function SiteFooter() {
             </a>
             ).
           </p>
-          <nav aria-label="Footer" className="flex flex-wrap gap-x-4 gap-y-1">
+          <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-1">
             {LINKS.map((link) => (
               <Link key={link.href} href={link.href} className="hover:text-foreground">
                 {link.label}

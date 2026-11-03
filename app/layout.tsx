@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo, JetBrains_Mono } from "next/font/google";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { StorageWarning } from "@/components/layout/StorageWarning";
 import { site, siteUrl } from "@/lib/site";
 import "./globals.css";
 
-// globals.css maps Tailwind's font-sans to --font-sans, so the variable name matters
-const geistSans = Geist({
+// globals.css maps Tailwind's font-sans and font-mono to these variables
+const archivo = Archivo({
   variable: "--font-sans",
   subsets: ["latin"],
+  axes: ["wdth"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Notation, evals and clocks: data that lines up in columns
+const mono = JetBrains_Mono({
+  variable: "--font-mono-face",
   subsets: ["latin"],
 });
 
@@ -31,10 +33,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // Dark-only: the "dark" class switches every shadcn token to the dark palette
+    // Dark-only: the "dark" class turns on the dark variants in the shadcn components
     <html
       lang="en"
-      className={`dark ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`dark ${archivo.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <SiteHeader />

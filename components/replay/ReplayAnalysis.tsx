@@ -66,21 +66,24 @@ export function ReplayAnalysis({ startFen, moves, userColor }: { startFen: strin
   )
 
   return (
-    <div className="flex flex-col gap-2 border-t pt-4 text-sm">
+    <div className="flex flex-col gap-2 border-t border-border pt-4 text-sm">
       <p>
-        Your accuracy: <span className="font-semibold">{accuracy === null ? "–" : `${Math.round(accuracy)}%`}</span>
+        Your accuracy:{" "}
+        <span className="font-mono text-base font-bold tabular-nums">
+          {accuracy === null ? "–" : `${Math.round(accuracy)}%`}
+        </span>
         <span className="text-muted-foreground">
           {" "}
           · {plural(counts.blunder, "blunder")} · {plural(counts.mistake, "mistake")} ·{" "}
           {counts.inaccuracy === 1 ? "1 inaccuracy" : `${counts.inaccuracy} inaccuracies`}
         </span>
       </p>
-      <p className="flex flex-wrap gap-x-1.5 font-mono">
+      <p className="flex flex-wrap gap-x-1.5 font-mono tabular-nums">
         {sans.map((san, i) => {
           const a = assessments[i + 1]
           const mine = a?.color === userColor
           return (
-            <span key={i} className={mine && a?.judgement ? JUDGEMENT_TEXT[a.judgement] : mine ? "" : "text-muted-foreground"}>
+            <span key={i} className={mine && a?.judgement ? `font-semibold ${JUDGEMENT_TEXT[a.judgement]}` : mine ? "" : "text-muted-foreground"}>
               {san}
               {mine && a?.judgement && JUDGEMENT_GLYPHS[a.judgement]}
             </span>

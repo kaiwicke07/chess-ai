@@ -56,24 +56,35 @@ export function OpeningExplorer({
         orientation={tree.color}
       />
 
-      <aside className="flex flex-col rounded-xl bg-card ring-1 ring-foreground/10">
-        <div className="flex flex-col gap-2 border-b px-4 py-3">
+      <aside className="flex flex-col border-t border-border rounded-xl bg-card ring-1 ring-foreground/10">
+        <div className="flex flex-col gap-3 border-b border-border px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <Button
               variant="ghost"
               size="sm"
+              className="-ml-2.5 text-xs"
               onClick={() => setCurrent(crumbs.at(-2)?.key ?? tree.root)}
               disabled={current === tree.root}
             >
               <ChevronLeft aria-hidden /> Back
             </Button>
             <span className="text-xs text-muted-foreground">
-              {node.games} {node.games === 1 ? "game" : "games"}
-              {here && ` · ${formatEval(here.eval)}`}
+              <span className="font-mono tabular-nums">{node.games}</span> {node.games === 1 ? "game" : "games"}
+              {here && (
+                <>
+                  {" "}
+                  · <span className="font-mono text-foreground tabular-nums">{formatEval(here.eval)}</span>
+                </>
+              )}
             </span>
           </div>
-          <p className="flex flex-wrap gap-x-1 font-mono text-sm">
-            <button type="button" className="text-muted-foreground hover:text-foreground" onClick={() => setCurrent(tree.root)}>
+          {/* Breadcrumb: each step is a button back to that position; the current one is set in ink */}
+          <p className="flex flex-wrap gap-x-1.5 gap-y-1 font-mono text-sm">
+            <button
+              type="button"
+              className="text-muted-foreground outline-none hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              onClick={() => setCurrent(tree.root)}
+            >
               Start
             </button>
             {crumbs.map((crumb) => (
@@ -81,7 +92,7 @@ export function OpeningExplorer({
                 key={crumb.key}
                 type="button"
                 onClick={() => setCurrent(crumb.key)}
-                className={crumb.key === current ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
+                className={`outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${crumb.key === current ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground"}`}
               >
                 {crumb.label}
               </button>
@@ -91,14 +102,14 @@ export function OpeningExplorer({
 
         {moves.length ? (
           <table className="text-sm">
-            <thead className="text-xs text-muted-foreground">
+            <thead className="text-xs font-semibold text-muted-foreground">
               <tr>
-                <th className="px-4 py-2 text-left font-normal">{yourMove ? "Your move" : "Their move"}</th>
-                <th className="px-2 py-2 text-right font-normal">Games</th>
-                <th className="px-2 py-2 text-right font-normal" title="Your score: wins plus half the draws">
+                <th className="px-4 py-2 text-left font-semibold">{yourMove ? "Your move" : "Their move"}</th>
+                <th className="px-2 py-2 text-right font-semibold">Games</th>
+                <th className="px-2 py-2 text-right font-semibold" title="Your score: wins plus half the draws">
                   Score
                 </th>
-                {yourMove && <th className="px-4 py-2 text-right font-normal">Cost</th>}
+                {yourMove && <th className="px-4 py-2 text-right font-semibold">Cost</th>}
               </tr>
             </thead>
             <tbody>
@@ -109,22 +120,24 @@ export function OpeningExplorer({
                 const score = Math.round(((win + draw / 2) / (win + draw + lost)) * 100)
                 const explorable = tree.nodes.has(move.next)
                 return (
-                  <tr key={move.uci} className="border-t">
+                  <tr key={move.uci} className="border-t border-border hover:bg-muted">
                     <td className="px-4 py-1.5">
                       <button
                         type="button"
                         disabled={!explorable}
                         onClick={() => setCurrent(move.next)}
-                        className="flex items-center gap-1.5 font-mono hover:text-primary disabled:hover:text-inherit"
+                        className="flex items-center gap-1.5 font-mono font-semibold outline-none hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:font-normal disabled:hover:text-inherit"
                       >
                         {move.san}
                         {here?.best === move.uci && <Star className="size-3 fill-best text-best" aria-label="Stockfish's choice" />}
                       </button>
                     </td>
-                    <td className="px-2 py-1.5 text-right tabular-nums">{move.count}</td>
-                    <td className="px-2 py-1.5 text-right tabular-nums">{score}%</td>
+                    <td className="px-2 py-1.5 text-right font-mono tabular-nums">{move.count}</td>
+                    <td className="px-2 py-1.5 text-right font-mono tabular-nums">{score}%</td>
                     {yourMove && (
-                      <td className={`px-4 py-1.5 text-right tabular-nums ${loss === null ? "text-muted-foreground" : lossClass(loss)}`}>
+                      <td
+                        className={`px-4 py-1.5 text-right font-mono tabular-nums ${loss === null ? "text-muted-foreground" : lossClass(loss)}`}
+                      >
                         {loss === null ? "–" : loss < 1 ? "0%" : `−${Math.round(loss)}%`}
                       </td>
                     )}
@@ -138,9 +151,9 @@ export function OpeningExplorer({
         )}
 
         {yourMove && here?.best && !moves.some((m) => m.uci === here.best) && (
-          <p className="border-t px-4 py-2 text-xs text-muted-foreground">
+          <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
             <Star className="mr-1 inline size-3 fill-best text-best" aria-hidden />
-            Stockfish prefers {uciLineToSan(node.fen, [here.best])[0]}, which you haven&apos;t played here.
+            Stockfish prefers <span className="font-mono text-foreground">{uciLineToSan(node.fen, [here.best])[0]}</span>, which you haven&apos;t played here.
           </p>
         )}
       </aside>

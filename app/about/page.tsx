@@ -38,50 +38,53 @@ const CREDITS: { name: string; href: string; license: string; note: string }[] =
   { name: "Lucide", href: "https://github.com/lucide-icons/lucide", license: "ISC", note: "Icons, including the knight logo." },
 ]
 
+// Read mode: one column, prose held to a 65-75ch measure, each section opened
+// by a heavy ink rule, links in the action color and always underlined
+const SECTION = "flex flex-col gap-4 border-t border-border pt-4"
+const LINK = "text-primary underline underline-offset-4 hover:decoration-2"
+
 export default function AboutPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-12 px-4 py-12 sm:px-6">
-      <header className="flex flex-col gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight">About {site.name}</h1>
-        <p className="text-pretty text-muted-foreground">
+      <header className="flex flex-col gap-4">
+        <h1 className="page-title">About {site.name}</h1>
+        <p className="max-w-[65ch] text-lg leading-relaxed text-pretty">
           A free chess trainer built from your own games. It runs entirely in your browser: no account, no server
           storing your data, and nothing that costs money to run.
         </p>
       </header>
 
-      <section aria-labelledby="how" className="flex flex-col gap-4">
-        <h2 id="how" className="text-xl font-semibold">
+      <section aria-labelledby="how" className={SECTION}>
+        <h2 id="how" className="section-title">
           How it works
         </h2>
-        <ol className="flex flex-col gap-3">
-          {STEPS.map(([title, body], i) => (
-            <li key={title} className="flex gap-3">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
-                {i + 1}
-              </span>
-              <p className="text-sm">
-                <span className="font-medium">{title}.</span> <span className="text-muted-foreground">{body}</span>
-              </p>
+        {/* The steps run in order (an ol), set as a ruled list: the verb in a
+            narrow column, its explanation beside it */}
+        <ol className="flex flex-col">
+          {STEPS.map(([title, body]) => (
+            <li key={title} className="grid gap-1 border-b border-border py-3 last:border-b-0 sm:grid-cols-[8rem_1fr] sm:gap-4">
+              <span className="font-semibold">{title}</span>
+              <p className="max-w-[65ch] leading-relaxed text-muted-foreground">{body}</p>
             </li>
           ))}
         </ol>
       </section>
 
-      <section aria-labelledby="data" className="flex flex-col gap-4">
-        <h2 id="data" className="text-xl font-semibold">
+      <section aria-labelledby="data" className={SECTION}>
+        <h2 id="data" className="section-title">
           Your data
         </h2>
         <DataPanel />
       </section>
 
-      <section aria-labelledby="credits" className="flex flex-col gap-4">
-        <h2 id="credits" className="text-xl font-semibold">
+      <section aria-labelledby="credits" className={SECTION}>
+        <h2 id="credits" className="section-title">
           Credits and licenses
         </h2>
-        <ul className="flex flex-col divide-y rounded-xl bg-card ring-1 ring-foreground/10">
+        <ul className="flex flex-col divide-y divide-border border-y border-border">
           {CREDITS.map((credit) => (
-            <li key={credit.name} className="flex flex-col gap-0.5 px-4 py-3 text-sm sm:flex-row sm:items-baseline sm:gap-3">
-              <a href={credit.href} target="_blank" rel="noopener noreferrer" className="font-medium underline-offset-4 hover:underline">
+            <li key={credit.name} className="flex flex-col gap-0.5 py-3 text-sm sm:flex-row sm:items-baseline sm:gap-3">
+              <a href={credit.href} target="_blank" rel="noopener noreferrer" className={`font-semibold ${LINK}`}>
                 {credit.name}
               </a>
               <span className="font-mono text-xs text-muted-foreground">{credit.license}</span>
@@ -89,35 +92,35 @@ export default function AboutPage() {
             </li>
           ))}
         </ul>
-        <p className="text-sm text-muted-foreground">
+        <p className="max-w-[70ch] leading-relaxed text-muted-foreground">
           The Stockfish engine files served by this site are the unmodified stockfish.js 19.0.1 release and come with
           their{" "}
-          <a href="/stockfish/COPYING.txt" className="underline underline-offset-4 hover:text-foreground">
+          <a href="/stockfish/COPYING.txt" className={LINK}>
             GPLv3 license
           </a>
           ; their exact source is linked above.
         </p>
       </section>
 
-      <section aria-labelledby="license" className="flex flex-col gap-3">
-        <h2 id="license" className="text-xl font-semibold">
+      <section aria-labelledby="license" className={SECTION}>
+        <h2 id="license" className="section-title">
           License and source
         </h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="max-w-[70ch] leading-relaxed text-muted-foreground">
           {site.name} itself is free software under the{" "}
-          <a href="https://www.gnu.org/licenses/agpl-3.0.html" className="underline underline-offset-4 hover:text-foreground">
+          <a href="https://www.gnu.org/licenses/agpl-3.0.html" className={LINK}>
             GNU AGPL v3.0
           </a>{" "}
           or later. Its complete source code is at{" "}
-          <a href={site.sourceUrl} className="underline underline-offset-4 hover:text-foreground">
+          <a href={site.sourceUrl} className={LINK}>
             github.com/kaiwicke07/chess-ai
           </a>
           . It is an independent project, not affiliated with or endorsed by Lichess or Chess.com. See also the{" "}
-          <Link href="/privacy" className="underline underline-offset-4 hover:text-foreground">
+          <Link href="/privacy" className={LINK}>
             privacy policy
           </Link>{" "}
           and{" "}
-          <Link href="/terms" className="underline underline-offset-4 hover:text-foreground">
+          <Link href="/terms" className={LINK}>
             terms of use
           </Link>
           .

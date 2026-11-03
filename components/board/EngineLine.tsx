@@ -28,18 +28,18 @@ export function EngineLine({
     const parts = numberMoves(fen, uciLineToSan(fen, entry.pv).slice(0, 8))
     line = (
       <span className="truncate font-mono">
-        <span className="text-best">{parts[0]}</span> {parts.slice(1).join(" ")}
+        <span className="font-semibold text-best">{parts[0]}</span> {parts.slice(1).join(" ")}
       </span>
     )
   }
 
   return (
-    <div className="flex flex-col gap-1 px-4 py-3 text-sm">
+    <div className="flex flex-col gap-1.5 border-b px-4 py-3 text-sm">
       <div className="flex items-center justify-between gap-3">
-        <span className="font-mono text-base font-semibold tabular-nums">
+        <span className="font-mono text-xl font-bold tabular-nums">
           {entry ? formatEval(entry.eval) : "…"}
         </span>
-        <span className="text-xs text-muted-foreground">
+        <span className="text-right text-xs font-semibold text-muted-foreground">
           {progress && progress.total
             ? progress.phase === "puzzles"
               ? `Finding puzzles ${progress.done}/${progress.total}`

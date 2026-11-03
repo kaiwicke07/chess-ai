@@ -25,36 +25,58 @@ export function WeakSpotList({
   onExplore: (key: string) => void
 }) {
   return (
-    <ol className="flex flex-col divide-y rounded-xl bg-card ring-1 ring-foreground/10">
+    <ol className="flex flex-col divide-y divide-border rounded-xl bg-card ring-1 ring-foreground/10">
       {spots.map((spot, index) => {
         const card = cards.get(spot.id)
         const schedule = !card ? "New" : card.due <= now ? "Due now" : `In ${formatInterval(card.due, now)}`
         const habit = spot.badMoves[0]
+        const active = spot.id === currentId
         return (
           <li
             key={spot.id}
-            className={`flex flex-col gap-2 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between ${spot.id === currentId ? "bg-primary/10" : ""}`}
+            aria-current={active ? "true" : undefined}
+            className={`flex flex-col gap-2 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between ${active ? "bg-muted" : ""}`}
           >
             <div className="flex min-w-0 items-start gap-3">
-              <span className="w-5 shrink-0 text-right text-muted-foreground tabular-nums">{index + 1}.</span>
+              {/* The rank number fills ink on the drill in progress, so the row reads as current without a colored rule */}
+              <span
+                className={`flex h-5 min-w-6 shrink-0 items-center justify-center px-1 font-mono text-xs tabular-nums ${active ? "bg-ink text-ink-foreground" : "text-muted-foreground"}`}
+              >
+                {index + 1}
+              </span>
               <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="truncate font-mono">{numberMoves(START, spot.pathSan).join(" ") || "Starting position"}</span>
+                <span className="truncate font-mono font-semibold">
+                  {numberMoves(START, spot.pathSan).join(" ") || "Starting position"}
+                </span>
                 <span className="text-muted-foreground">
-                  You play <span className="font-mono text-mistake">{habit.san}</span> ({habit.count} of {spot.node.games}{" "}
-                  games, −{Math.round(habit.loss)}%). Better: <span className="font-mono text-best">{spot.best.san}</span>
+                  You play <span className="font-mono text-mistake">{habit.san}</span> (
+                  <span className="font-mono tabular-nums">{habit.count}</span> of{" "}
+                  <span className="font-mono tabular-nums">{spot.node.games}</span> games,{" "}
+                  <span className="font-mono tabular-nums">−{Math.round(habit.loss)}%</span>). Better:{" "}
+                  <span className="font-mono text-best">{spot.best.san}</span>
                 </span>
               </div>
             </div>
-            <div className="flex shrink-0 items-center gap-2 pl-8 sm:pl-0">
+            <div className="flex shrink-0 items-center gap-2 pl-9 sm:pl-0">
               <span
-                className={`text-xs ${!card ? "text-primary" : card.due <= now ? "text-mistake" : "text-muted-foreground"}`}
+                className={`font-mono text-xs tabular-nums ${!card ? "text-primary" : card.due <= now ? "text-mistake" : "text-muted-foreground"}`}
               >
                 {schedule}
               </span>
-              <Button variant="outline" size="sm" onClick={() => onDrill(spot.id)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => onDrill(spot.id)}
+              >
                 Drill
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => onExplore(spot.node.key)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs"
+                onClick={() => onExplore(spot.node.key)}
+              >
                 Explore
               </Button>
             </div>

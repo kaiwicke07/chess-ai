@@ -29,11 +29,13 @@ export function AnalysisProgress({
     const fraction = active?.phase === "puzzles" ? 0.7 + 0.3 * phaseFraction : 0.7 * phaseFraction
     const analyzed = gameIds.length - unanalyzedIds.length
     return (
-      <div className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm ring-1 ring-foreground/10">
+      <div className="flex items-center gap-3 rounded-xl bg-card px-4 py-3 text-sm ring-1 ring-foreground/10">
         <Cpu className="size-4 shrink-0 animate-pulse text-primary" aria-hidden />
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <span role="status">
-            Analyzing with Stockfish · {analyzed} of {gameIds.length} done
+            Analyzing with Stockfish ·{" "}
+            <span className="font-mono tabular-nums">{analyzed}</span> of{" "}
+            <span className="font-mono tabular-nums">{gameIds.length}</span> done
             {active && (
               <span className="text-muted-foreground">
                 {" "}
@@ -44,7 +46,7 @@ export function AnalysisProgress({
               </span>
             )}
           </span>
-          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+          <div className="h-1.5 overflow-hidden bg-muted">
             <div
               className="h-full bg-primary transition-[width]"
               style={{ width: `${((analyzed + fraction) / gameIds.length) * 100}%` }}
@@ -61,7 +63,7 @@ export function AnalysisProgress({
   if (!unanalyzedIds.length) return null
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl px-4 py-3 text-sm ring-1 ring-foreground/10 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-xl bg-card px-4 py-3 text-sm ring-1 ring-foreground/10 sm:flex-row sm:items-center sm:justify-between">
       <span className="text-muted-foreground">
         {queue.error ? (
           <span className="text-destructive">{queue.error}</span>

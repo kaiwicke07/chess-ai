@@ -134,16 +134,14 @@ function Review({ game }: { game: Game }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex flex-col gap-2">
-          <Link
-            href={`/u/${game.platform}/${username}`}
-            className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-          >
+      {/* The spread opens with a heavy ink rule under the title, like a magazine headline */}
+      <header className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 flex-col gap-3">
+          <Link href={`/u/${game.platform}/${username}`} className="flex w-fit items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary">
             <ArrowLeft className="size-4" aria-hidden /> All games
           </Link>
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">vs {opponent.name}</h1>
+            <h1 className="page-title min-w-0 break-words">vs {opponent.name}</h1>
             <span className="text-sm text-muted-foreground">
               {formatOutcome(game)} · {SPEED_LABELS[game.speed]} {formatTimeControl(game.timeControl)} ·{" "}
               {new Date(game.playedAt).toLocaleDateString(undefined, { dateStyle: "medium" })}
@@ -182,17 +180,18 @@ function Review({ game }: { game: Game }) {
           <div className="pt-2 lg:hidden">{controls}</div>
         </div>
 
-        <aside className="flex flex-col rounded-xl bg-card ring-1 ring-foreground/10">
+        {/* The annotation column: a lighter sheet under a heavy ink rule, rows split by hairlines */}
+        <aside className="flex min-w-0 flex-col border-t border-border rounded-xl bg-card ring-1 ring-foreground/10">
           <div className="flex items-start justify-between gap-3 border-b px-4 py-3">
-            <div className="min-w-0 text-sm">
-              <p className="truncate font-medium">{game.opening.name ?? "Unknown opening"}</p>
+            <div className="flex min-w-0 flex-col gap-1">
+              <p className="font-display text-2xl text-balance">{game.opening.name ?? "Unknown opening"}</p>
               {game.opening.eco && <p className="font-mono text-xs text-muted-foreground">{game.opening.eco}</p>}
             </div>
             <a
               href={game.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              className="flex shrink-0 items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
             >
               {PLATFORM_LABELS[game.platform]} <ExternalLink className="size-3.5" aria-hidden />
             </a>
@@ -217,7 +216,7 @@ function Review({ game }: { game: Game }) {
             onSelect={select}
             footer={
               <p className="border-t px-4 py-2 text-center text-sm text-muted-foreground">
-                <span className="font-mono">{formatScore(game)}</span> · {formatOutcome(game)}
+                <span className="font-mono font-bold text-foreground tabular-nums">{formatScore(game)}</span> · {formatOutcome(game)}
               </p>
             }
           />
@@ -232,20 +231,23 @@ function Review({ game }: { game: Game }) {
 export function ReviewSkeleton() {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,34rem)_minmax(18rem,1fr)]" aria-hidden>
-      <div className="aspect-square w-full animate-pulse rounded-lg bg-muted" />
-      <div className="h-96 animate-pulse rounded-xl bg-muted" />
+      <div className="aspect-square w-full animate-pulse bg-muted" />
+      <div className="h-96 animate-pulse border-t border-border bg-muted" />
     </div>
   )
 }
 
 function MissingGame() {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-xl p-6 ring-1 ring-foreground/10">
+    <div className="flex flex-col items-start gap-3 border-t border-border rounded-xl bg-card p-6 ring-1 ring-foreground/10">
       <p>This game isn&apos;t in this browser&apos;s library.</p>
       <p className="text-sm text-muted-foreground">
         Games are stored locally. Import the account that played it, then open it from the game list.
       </p>
-      <Link href="/" className="text-sm underline underline-offset-4">
+      <Link
+        href="/"
+        className="text-xs font-semibold text-primary underline underline-offset-4 hover:decoration-2 focus-visible:outline-2 focus-visible:outline-primary"
+      >
         Import games
       </Link>
     </div>

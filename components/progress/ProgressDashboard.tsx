@@ -86,12 +86,12 @@ export function ProgressDashboard() {
     }
   }, [account, signal])
 
-  if (accounts === undefined || !now) return <div className="h-96 animate-pulse rounded-xl bg-muted" aria-hidden />
+  if (accounts === undefined || !now) return <div className="h-96 animate-pulse bg-muted" aria-hidden />
   if (!account) {
     return (
       <div className="flex flex-col gap-6">
-        <h1 className="text-3xl font-semibold tracking-tight">Progress</h1>
-        <div className="flex flex-col items-start gap-4 rounded-xl p-6 ring-1 ring-foreground/10">
+        <h1 className="page-title">Progress</h1>
+        <div className="flex flex-col items-start gap-4 border-t border-border pt-5">
           <TrendingUp className="size-6 text-primary" aria-hidden />
           <p className="text-sm text-muted-foreground">Import an account first; progress is measured from its games.</p>
           <RecentAccounts />
@@ -99,7 +99,7 @@ export function ProgressDashboard() {
       </div>
     )
   }
-  if (!loaded) return <div className="h-96 animate-pulse rounded-xl bg-muted" aria-hidden />
+  if (!loaded) return <div className="h-96 animate-pulse bg-muted" aria-hidden />
 
   // While a different account or newer data loads, keep showing the last result, dimmed
   const refreshing = loaded.account !== account.id || loaded.signal !== signal
@@ -130,30 +130,31 @@ export function ProgressDashboard() {
   return (
     <div className={`flex flex-col gap-8 transition-opacity ${refreshing ? "opacity-60" : ""}`}>
       <header className="flex flex-col gap-1">
-        <h1 className="text-3xl font-semibold tracking-tight">Progress</h1>
+        <h1 className="page-title">Progress</h1>
         <p className="text-sm text-muted-foreground">
           Based on {stats.games.length} of {stats.totalGames} games analyzed for {account.username} ·{" "}
           {PLATFORM_LABELS[account.platform]}.{" "}
           {stats.games.length < stats.totalGames && (
-            <Link href={`/u/${account.platform}/${username}`} className="text-primary underline-offset-4 hover:underline">
+            <Link href={`/u/${account.platform}/${username}`} className="text-primary underline underline-offset-4 hover:decoration-2">
               Analyze the rest
             </Link>
           )}
         </p>
       </header>
 
-      {/* One row of filters, above everything they scope */}
-      <div className="flex flex-wrap items-center gap-2">
-        <ToggleGroup value={[range]} onValueChange={(v) => v[0] && setRange(v[0] as Range)} variant="outline" size="sm" aria-label="Date range">
+      {/* One row of filters, above everything they scope. Segments are joined
+          (spacing 0) so each filter reads as one control. */}
+      <div className="flex flex-wrap items-center gap-3">
+        <ToggleGroup value={[range]} onValueChange={(v) => v[0] && setRange(v[0] as Range)} variant="outline" size="sm" spacing={0} aria-label="Date range">
           {RANGES.map((r) => (
-            <ToggleGroupItem key={r.id} value={r.id} className="aria-pressed:border-primary/60 aria-pressed:text-foreground">
+            <ToggleGroupItem key={r.id} value={r.id}>
               {r.label}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <ToggleGroup value={[speed]} onValueChange={(v) => v[0] && setSpeed(v[0] as SpeedFilter)} variant="outline" size="sm" aria-label="Game speed">
+        <ToggleGroup value={[speed]} onValueChange={(v) => v[0] && setSpeed(v[0] as SpeedFilter)} variant="outline" size="sm" spacing={0} aria-label="Game speed">
           {SPEEDS.map((s) => (
-            <ToggleGroupItem key={s.id} value={s.id} className="aria-pressed:border-primary/60 aria-pressed:text-foreground">
+            <ToggleGroupItem key={s.id} value={s.id}>
               {s.label}
             </ToggleGroupItem>
           ))}
@@ -162,7 +163,7 @@ export function ProgressDashboard() {
           <select
             value={account.id}
             onChange={(event) => setAccountId(event.target.value)}
-            className="h-7 rounded-lg border border-input bg-input/30 px-2 text-sm"
+            className="h-7 border border-border rounded-xl bg-card px-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             aria-label="Account"
           >
             {accounts.map((a) => (
@@ -174,7 +175,8 @@ export function ProgressDashboard() {
         )}
       </div>
 
-      <section aria-label="Summary" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* The headline figures as one ruled results row, not a set of cards */}
+      <dl aria-label="Summary" className="grid border-y-[3px] border-border lg:grid-cols-4">
         <StatTile label="Games analyzed" value={String(current.games)} detail={previous ? `${previous.games} the period before` : undefined} />
         <StatTile
           label="Accuracy"
@@ -192,14 +194,14 @@ export function ProgressDashboard() {
           detail={`${plural(current.puzzles, "attempt")} · all speeds`}
           change={previous && change(current.puzzleClean && current.puzzleClean * 100, previous.puzzleClean && previous.puzzleClean * 100, true, " pts")}
         />
-      </section>
+      </dl>
 
       {weeks.length > 0 ? (
-        <section aria-labelledby="trends" className="flex flex-col gap-3">
-          <h2 id="trends" className="text-lg font-semibold">
+        <section aria-labelledby="trends" className="flex flex-col gap-4 border-t border-border pt-4">
+          <h2 id="trends" className="section-title">
             Week by week
           </h2>
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-6 lg:grid-cols-3">
             <TrendChart title="Accuracy" data={weeks.map((w) => ({ week: w.week, value: w.accuracy }))} format={percent} domain={[0, 100]} />
             <TrendChart
               title="Blunders per 100 moves"
@@ -215,27 +217,29 @@ export function ProgressDashboard() {
             />
           </div>
           <details className="text-sm">
-            <summary className="w-fit cursor-pointer text-muted-foreground hover:text-foreground">Show as a table</summary>
-            <div className="mt-3 overflow-x-auto rounded-xl bg-card ring-1 ring-foreground/10">
+            <summary className="w-fit cursor-pointer font-semibold text-primary underline underline-offset-4 hover:decoration-2">
+              Show as a table
+            </summary>
+            <div className="mt-3 overflow-x-auto">
               <table className="w-full">
-                <thead className="text-xs text-muted-foreground">
-                  <tr className="border-b">
+                <thead className="text-[11px] text-muted-foreground">
+                  <tr className="border-b border-border">
                     {["Week of", "Games", "Accuracy", "Blunders / 100", "Puzzles", "Solved cleanly"].map((h, i) => (
-                      <th key={h} className={`px-4 py-2 font-normal ${i ? "text-right" : "text-left"}`}>
+                      <th key={h} className={`py-2 font-semibold ${i ? "px-3 text-right" : "pr-3 text-left"}`}>
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="tabular-nums">
+                <tbody className="font-mono text-xs tabular-nums">
                   {[...weeks].reverse().map((w) => (
-                    <tr key={w.week} className="border-b last:border-0">
-                      <td className="px-4 py-1.5">{new Date(w.week).toLocaleDateString(undefined, { dateStyle: "medium" })}</td>
-                      <td className="px-4 py-1.5 text-right">{w.games}</td>
-                      <td className="px-4 py-1.5 text-right">{w.accuracy === null ? "–" : percent(w.accuracy)}</td>
-                      <td className="px-4 py-1.5 text-right">{w.blunderRate === null ? "–" : w.blunderRate.toFixed(1)}</td>
-                      <td className="px-4 py-1.5 text-right">{w.puzzles}</td>
-                      <td className="px-4 py-1.5 text-right">{w.puzzleClean === null ? "–" : percent(w.puzzleClean * 100)}</td>
+                    <tr key={w.week} className="border-b border-border last:border-0">
+                      <td className="py-1.5 pr-3">{new Date(w.week).toLocaleDateString(undefined, { dateStyle: "medium" })}</td>
+                      <td className="px-3 py-1.5 text-right">{w.games}</td>
+                      <td className="px-3 py-1.5 text-right">{w.accuracy === null ? "–" : percent(w.accuracy)}</td>
+                      <td className="px-3 py-1.5 text-right">{w.blunderRate === null ? "–" : w.blunderRate.toFixed(1)}</td>
+                      <td className="px-3 py-1.5 text-right">{w.puzzles}</td>
+                      <td className="px-3 py-1.5 text-right">{w.puzzleClean === null ? "–" : percent(w.puzzleClean * 100)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -244,16 +248,16 @@ export function ProgressDashboard() {
           </details>
         </section>
       ) : (
-        <p className="rounded-xl p-6 text-sm text-muted-foreground ring-1 ring-foreground/10">
+        <p className="border-t border-border pt-4 text-sm text-muted-foreground">
           No analyzed games or puzzle attempts in this period.
         </p>
       )}
 
       {games.length > 0 && (
         <>
-          <section aria-labelledby="by-phase" className="grid gap-6 lg:grid-cols-2">
-            <div className="flex flex-col gap-3">
-              <h2 id="by-phase" className="text-lg font-semibold">
+          <section aria-labelledby="by-phase" className="grid gap-8 lg:grid-cols-2">
+            <div className="flex flex-col gap-3 border-t border-border pt-4">
+              <h2 id="by-phase" className="section-title">
                 By game phase
               </h2>
               <BreakdownTable
@@ -272,8 +276,8 @@ export function ProgressDashboard() {
                 minor piece each or less.
               </p>
             </div>
-            <div className="flex flex-col gap-3">
-              <h2 className="text-lg font-semibold">Under time pressure</h2>
+            <div className="flex flex-col gap-3 border-t border-border pt-4">
+              <h2 className="section-title">Under time pressure</h2>
               <BreakdownTable
                 head="Clock"
                 rows={[
@@ -288,8 +292,8 @@ export function ProgressDashboard() {
             </div>
           </section>
 
-          <section aria-labelledby="by-opening" className="flex flex-col gap-3">
-            <h2 id="by-opening" className="text-lg font-semibold">
+          <section aria-labelledby="by-opening" className="flex flex-col gap-3 border-t border-border pt-4">
+            <h2 id="by-opening" className="section-title">
               By opening
             </h2>
             <BreakdownTable
@@ -300,7 +304,7 @@ export function ProgressDashboard() {
                 label: (
                   <span className="flex items-center gap-2">
                     <span
-                      className={`size-2.5 shrink-0 rounded-sm ${o.color === "white" ? "bg-white" : "bg-neutral-950 ring-1 ring-neutral-300"}`}
+                      className={`size-2.5 shrink-0 ${o.color === "white" ? "bg-neutral-100" : "bg-neutral-900 ring-1 ring-foreground/30"}`}
                       aria-label={`as ${o.color}`}
                     />
                     {o.opening}
@@ -315,7 +319,7 @@ export function ProgressDashboard() {
             />
             <p className="text-xs text-muted-foreground">
               Your 10 most played opening families, by color. Score counts a win as 1 and a draw as ½.{" "}
-              <Link href="/openings" className="text-primary underline-offset-4 hover:underline">
+              <Link href="/openings" className="text-primary underline underline-offset-4 hover:decoration-2">
                 Drill your weak spots
               </Link>
             </p>

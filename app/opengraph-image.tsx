@@ -20,7 +20,7 @@ export default function OpengraphImage() {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: 72,
-          background: "#0b0c10",
+          background: "#181715",
           color: "#f1f2f5",
           fontFamily: "sans-serif",
         }}
@@ -31,13 +31,13 @@ export default function OpengraphImage() {
               width: 72,
               height: 72,
               borderRadius: 16,
-              background: "#9c95fe",
+              background: "#58a2f2",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#141022" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#06101c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 20a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z" />
               <path d="M16.5 18c1-2 2.5-5 2.5-9a7 7 0 0 0-7-7H6.635a1 1 0 0 0-.768 1.64L7 5l-2.32 5.802a2 2 0 0 0 .95 2.526l2.87 1.456" />
               <path d="m15 5 1.425-1.425" />
@@ -50,7 +50,7 @@ export default function OpengraphImage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <span style={{ fontSize: 76, fontWeight: 700, letterSpacing: -2 }}>{site.tagline}</span>
-          <span style={{ fontSize: 30, color: "#9a9ea8", maxWidth: 960 }}>
+          <span style={{ fontSize: 30, color: "#a7a4a1", maxWidth: 960 }}>
             Your Lichess or Chess.com games, analyzed by Stockfish and turned into training. Free, private, no account.
           </span>
         </div>
@@ -66,7 +66,7 @@ export default function OpengraphImage() {
                 fontSize: 22,
                 padding: "10px 22px",
                 borderRadius: 999,
-                border: "2px solid #2a2d36",
+                border: "2px solid #2d2b29",
                 color: "#c9ccd4",
               }}
             >

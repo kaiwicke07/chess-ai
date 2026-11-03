@@ -31,8 +31,9 @@ export function EvalGraph({
       a?.judgement === "mistake" || a?.judgement === "blunder",
   )
 
+  // Dark field with white's share in light: the same reading as the eval bar
   return (
-    <div className="h-24 cursor-pointer bg-neutral-900" aria-label="Evaluation graph">
+    <div className="h-24 cursor-pointer overflow-hidden rounded-lg bg-neutral-800" aria-label="Evaluation graph">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}
@@ -44,15 +45,15 @@ export function EvalGraph({
           <XAxis dataKey="ply" type="number" domain={[0, Math.max(1, evals.length - 1)]} hide />
           <YAxis domain={[0, 100]} hide />
           {/* Needed for click-to-select; renders no tooltip box */}
-          <Tooltip content={() => null} cursor={{ stroke: "var(--muted-foreground)" }} />
+          <Tooltip content={() => null} cursor={{ stroke: "var(--ink-foreground)", strokeOpacity: 0.5 }} />
           <Area
             dataKey="white"
             type="linear"
             baseValue={0}
-            stroke="var(--foreground)"
+            stroke="var(--ink-foreground)"
             strokeWidth={1}
-            fill="var(--foreground)"
-            fillOpacity={0.8}
+            fill="var(--ink-foreground)"
+            fillOpacity={0.9}
             isAnimationActive={false}
           />
           <ReferenceLine y={50} stroke="var(--muted-foreground)" strokeDasharray="3 3" />

@@ -1,34 +1,48 @@
+import { Suspense, type ComponentType, type ReactNode } from "react"
 import Link from "next/link"
 import { ChessKnight } from "lucide-react"
 
+import { NavLink, PlainNavLink } from "@/components/layout/NavLink"
 import { PuzzlesDueBadge } from "@/components/layout/PuzzlesDueBadge"
 import { site } from "@/lib/site"
 
-const LINK = "flex items-center rounded-md px-2 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground sm:px-3"
+type LinkComponent = ComponentType<{ href: string; children: ReactNode }>
+
+/** The three section links, drawn with either link component. */
+function MainLinks({ Link: Item }: { Link: LinkComponent }) {
+  return (
+    <>
+      <Item href="/puzzles">
+        Puzzles
+        {/* Client component: reads the schedule from IndexedDB */}
+        <PuzzlesDueBadge />
+      </Item>
+      <Item href="/openings">Openings</Item>
+      <Item href="/progress">Progress</Item>
+    </>
+  )
+}
 
 export function SiteHeader() {
   return (
-    <header className="border-b">
+    <header className="sticky top-0 z-40 border-b bg-background">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2 font-semibold" aria-label={`${site.name} home`}>
-          <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <ChessKnight className="size-4" aria-hidden />
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-2 rounded-lg font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          aria-label={`${site.name} home`}
+        >
+          <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <ChessKnight className="size-4.5" aria-hidden />
           </span>
           {/* On phones the knight alone leaves room for the three links */}
-          <span className="hidden sm:inline">{site.name}</span>
+          <span className="hidden text-[1.05rem] tracking-tight sm:inline">{site.name}</span>
         </Link>
-        <nav aria-label="Main" className="flex items-center gap-0.5 text-sm sm:gap-1">
-          <Link href="/puzzles" className={LINK}>
-            Puzzles
-            {/* Client component: reads the schedule from IndexedDB */}
-            <PuzzlesDueBadge />
-          </Link>
-          <Link href="/openings" className={LINK}>
-            Openings
-          </Link>
-          <Link href="/progress" className={LINK}>
-            Progress
-          </Link>
+        <nav aria-label="Main" className="flex items-center gap-0.5 sm:gap-1">
+          {/* The active highlight needs the path (request-time data), so it streams in */}
+          <Suspense fallback={<MainLinks Link={PlainNavLink} />}>
+            <MainLinks Link={NavLink} />
+          </Suspense>
         </nav>
       </div>
     </header>

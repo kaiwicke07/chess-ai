@@ -52,6 +52,7 @@ export function MoveList({
     if (index === undefined) return <span />
     const active = index === ply
     const judgement = assessments[index]?.judgement
+    // The current move is a solid ultramarine chip; its glyph still names the judgement
     return (
       <button
         ref={active ? activeRef : undefined}
@@ -59,7 +60,7 @@ export function MoveList({
         onClick={() => onSelect(index)}
         aria-current={active ? "step" : undefined}
         aria-label={judgement ? `${positions[index].lastMove?.san}, ${JUDGEMENT_LABELS[judgement]}` : undefined}
-        className={`rounded px-2 py-0.5 text-left font-mono text-sm ${active ? "bg-primary/25 text-foreground" : "hover:bg-muted"} ${judgement ? JUDGEMENT_TEXT[judgement] : ""}`}
+        className={`px-2 py-0.5 text-left font-mono text-sm tabular-nums focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary ${active ? "bg-primary font-semibold text-primary-foreground" : `hover:bg-muted ${judgement ? JUDGEMENT_TEXT[judgement] : ""}`}`}
       >
         {positions[index].lastMove?.san}
         {judgement && <span className="font-semibold">{JUDGEMENT_GLYPHS[judgement]}</span>}
@@ -72,7 +73,7 @@ export function MoveList({
       <ol className="grid grid-cols-[2.5rem_1fr_1fr] gap-y-0.5 p-2">
         {rows.map((row) => (
           <li key={row.number} className="contents">
-            <span className="py-0.5 text-right pr-2 font-mono text-sm text-muted-foreground">{row.number}.</span>
+            <span className="py-0.5 pr-2 text-right font-mono text-sm text-muted-foreground tabular-nums">{row.number}.</span>
             {cell(row.white)}
             {cell(row.black)}
           </li>

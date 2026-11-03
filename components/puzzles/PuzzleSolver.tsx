@@ -119,6 +119,8 @@ export function PuzzleSolver({
   const opponent = game && (game.userColor === "white" ? game.black : game.white)
   const [platform, sourceId] = puzzle.gameId.split(":")
 
+  // The prompt is the panel's headline, set like a magazine puzzle column;
+  // feedback swaps in on the same line in the classification colors
   let prompt: React.ReactNode
   if (outcome) prompt = <span className={outcome === "failed" ? "" : "text-best"}>{OUTCOME_TEXT[outcome]}</span>
   else if (wrong) prompt = <span className="text-blunder">Not the move. Try again.</span>
@@ -137,13 +139,14 @@ export function PuzzleSolver({
         hintSquare={state.hintUsed && userToMove ? puzzle.solution[state.step].slice(0, 2) : null}
       />
 
-      <aside className="flex flex-col gap-4 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-        <div className="flex items-center gap-2">
+      <aside className="flex flex-col gap-5 border-t border-border rounded-xl bg-card p-5 ring-1 ring-foreground/10">
+        <div className="flex items-start gap-3">
+          {/* Side to move as a printed swatch: paper for white, solid ink for black */}
           <span
-            className={`size-3.5 shrink-0 rounded-sm ${puzzle.color === "white" ? "bg-white" : "bg-neutral-950 ring-1 ring-neutral-300"}`}
+            className={`mt-1 size-5 shrink-0 rounded-full ring-1 ring-foreground/30 ${puzzle.color === "white" ? "bg-neutral-100" : "bg-neutral-900"}`}
             aria-hidden
           />
-          <p className="text-lg font-semibold" role="status">
+          <p className="font-display text-3xl text-balance sm:text-4xl" role="status">
             {prompt}
           </p>
         </div>
@@ -167,20 +170,28 @@ export function PuzzleSolver({
         )}
 
         {outcome && (
-          <div className="flex flex-col gap-3 text-sm">
+          <div className="flex flex-col gap-4 border-t border-border pt-4 text-sm">
             {review && (
               <p className="flex items-center gap-2" role="status">
-                <CalendarClock className="size-4 text-primary" aria-hidden />
+                <CalendarClock className="size-4 shrink-0 text-primary" aria-hidden />
                 <span>
-                  Graded <span className="font-medium">{GRADE_LABELS[review.grade as Grade]}</span> · next review in{" "}
+                  Graded{" "}
+                  <span className="text-xs font-semibold">
+                    {GRADE_LABELS[review.grade as Grade]}
+                  </span>{" "}
+                  · next review in{" "}
                   {/* The moment it was saved is "now" enough for a relative time */}
-                  {formatInterval(review.due, review.savedAt)}
+                  <span className="font-mono tabular-nums">{formatInterval(review.due, review.savedAt)}</span>
                 </span>
               </p>
             )}
             <div className="flex flex-wrap gap-1.5">
               {puzzle.themes.map((theme) => (
-                <Badge key={theme} variant="secondary">
+                <Badge
+                  key={theme}
+                  variant="outline"
+                  className="border-borderfont-semibold"
+                >
                   {theme === "mate" && puzzle.mateIn ? `Mate in ${puzzle.mateIn}` : THEME_LABELS[theme]}
                 </Badge>
               ))}

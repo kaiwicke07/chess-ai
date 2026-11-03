@@ -66,8 +66,10 @@ export function DataPanel() {
     })
 
   return (
+    // A flat sheet on the paper. The irreversible delete sits below a hairline,
+    // apart from the backup actions, so it's never one slip away from Export.
     <div className="flex flex-col gap-4 rounded-xl bg-card p-5 ring-1 ring-foreground/10">
-      <p className="text-sm text-muted-foreground">
+      <p className="max-w-[70ch] text-sm leading-relaxed text-muted-foreground">
         {counts
           ? `This browser holds ${counts.accounts} ${counts.accounts === 1 ? "account" : "accounts"}, ${counts.games} games, ${counts.puzzles} puzzles and ${counts.reviews} practice reviews.`
           : "Counting…"}{" "}
@@ -80,9 +82,12 @@ export function DataPanel() {
         <Button variant="outline" onClick={() => fileInput.current?.click()} disabled={busy}>
           <Upload aria-hidden /> Restore from backup
         </Button>
-        <Button variant="ghost" className="text-destructive hover:text-destructive" onClick={() => void deleteAll()} disabled={busy}>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-4">
+        <Button variant="destructive" onClick={() => void deleteAll()} disabled={busy}>
           <Trash2 aria-hidden /> Delete all data
         </Button>
+        <p className="text-xs text-muted-foreground">Removes everything from this browser. It can&apos;t be undone.</p>
         <input
           ref={fileInput}
           type="file"

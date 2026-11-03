@@ -144,7 +144,7 @@ export function OpeningDrill({
   else if (phase === "checking")
     prompt = (
       <span className="flex items-center gap-2 text-muted-foreground">
-        <LoaderCircle className="size-4 animate-spin" aria-hidden /> Checking {shown?.san}…
+        <LoaderCircle className="size-6 shrink-0 animate-spin" aria-hidden /> Checking {shown?.san}…
       </span>
     )
   else if (wrong) prompt = <span className="text-blunder">{wrong} isn&apos;t good enough here. Try again.</span>
@@ -162,10 +162,13 @@ export function OpeningDrill({
         hintSquare={hintUsed ? spot.best.uci.slice(0, 2) : null}
       />
 
-      <aside className="flex flex-col gap-4 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-        <div className="flex flex-col gap-1">
-          <p className="font-mono text-sm text-muted-foreground">{numberMoves(new Chess().fen(), spot.pathSan).join(" ") || "Starting position"}</p>
-          <p className="text-lg font-semibold" role="status">
+      <aside className="flex flex-col gap-5 border-t border-border rounded-xl bg-card p-5 ring-1 ring-foreground/10">
+        <div className="flex flex-col gap-3">
+          <p className="font-mono text-sm text-muted-foreground">
+            {numberMoves(new Chess().fen(), spot.pathSan).join(" ") || "Starting position"}
+          </p>
+          {/* The prompt is the panel's headline; feedback replaces it in place */}
+          <p className="font-display text-3xl text-balance sm:text-4xl" role="status">
             {prompt}
           </p>
         </div>
@@ -182,24 +185,33 @@ export function OpeningDrill({
         )}
 
         {outcome && (
-          <div className="flex flex-col gap-3 text-sm">
+          <div className="flex flex-col gap-4 border-t border-border pt-4 text-sm">
             {review && (
               <p className="flex items-center gap-2">
-                <CalendarClock className="size-4 text-primary" aria-hidden />
+                <CalendarClock className="size-4 shrink-0 text-primary" aria-hidden />
                 <span>
-                  Graded <span className="font-medium">{GRADE_LABELS[review.grade as Grade]}</span> · next drill in{" "}
-                  {formatInterval(review.due, review.savedAt)}
+                  Graded{" "}
+                  <span className="text-xs font-semibold">
+                    {GRADE_LABELS[review.grade as Grade]}
+                  </span>{" "}
+                  · next drill in{" "}
+                  <span className="font-mono tabular-nums">{formatInterval(review.due, review.savedAt)}</span>
                 </span>
               </p>
             )}
             {usual && (
               <p className="text-muted-foreground">
                 In your games you played <span className="font-mono text-mistake">{usual.san}</span> here{" "}
-                {usual.count} of {spot.node.games} times, giving up about {Math.round(usual.loss)}% win chance.
+                <span className="font-mono tabular-nums">{usual.count}</span> of{" "}
+                <span className="font-mono tabular-nums">{spot.node.games}</span> times, giving up about{" "}
+                <span className="font-mono tabular-nums">{Math.round(usual.loss)}%</span> win chance.
               </p>
             )}
-            <p>
-              Stockfish&apos;s main line: <span className="font-mono">{spot.line.join(" ")}</span>
+            <p className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-muted-foreground">
+                Stockfish&apos;s main line
+              </span>
+              <span className="font-mono">{spot.line.join(" ")}</span>
             </p>
             {onNext && (
               <Button className="w-fit" onClick={onNext}>

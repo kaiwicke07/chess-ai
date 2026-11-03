@@ -2,22 +2,20 @@ import Link from "next/link"
 
 import { buttonVariants } from "@/components/ui/button"
 
+/**
+ * The custom 404, set like a magazine page: a heavy rule, a display-type
+ * headline, one sentence and one way forward.
+ */
 export default function NotFound() {
   return (
-    <div className="mx-auto flex w-full max-w-xl flex-col items-start gap-4 px-4 py-20 sm:px-6">
-      <p className="font-mono text-sm text-muted-foreground">404</p>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">This page doesn&apos;t exist</h1>
-        <p className="text-sm text-muted-foreground">
-          Check the address, or start from your games. Links to games only work in the browser that imported them.
+    <div className="mx-auto w-full max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
+      <div className="flex flex-col items-start gap-6 border-t border-border pt-6">
+        <h1 className="font-display text-[clamp(3rem,11vw,6.5rem)] text-balance">This page doesn&apos;t exist</h1>
+        <p className="max-w-[60ch] text-lg leading-relaxed text-pretty">
+          Check the address, or start from your games; links to games only work in the browser that imported them.
         </p>
-      </div>
-      <div className="flex gap-2">
-        <Link href="/" className={buttonVariants()}>
+        <Link href="/" className={buttonVariants({ size: "lg" })}>
           Go home
-        </Link>
-        <Link href="/puzzles" className={buttonVariants({ variant: "outline" })}>
-          Puzzles
         </Link>
       </div>
     </div>

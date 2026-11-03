@@ -81,10 +81,11 @@ npx next typegen   # regenerate route types after adding routes
   - `lib/chess/san.ts`: `uciLineToSan` and `numberMoves`.
   - `lib/analysis/winProbability.ts`: `winPercent` (Lichess formula, cp clamped to ±1000) and `formatEval`.
   - `lib/format.ts`: time controls, clocks, outcome and score formatting, `SPEED_LABELS`.
-- **Theme tokens** (`app/globals.css`, dark-only via `class="dark"` on `<html>`):
-  - Brand: violet primary.
+- **Theme tokens** (`app/globals.css`, one dark palette in `:root`, plus `class="dark"` on `<html>` for the shadcn dark variants):
+  - Brand: soft blue primary on warm charcoal, rounded corners (`--radius: 0.75rem`). The owner wants it simple and familiar (see PRODUCT.md, Brand Commitments).
+  - Fonts: Archivo (`font-sans`), JetBrains Mono (`font-mono`) for notation and numbers. `page-title` and `section-title` utilities style page and section headings.
   - Classifications: `best`, `inaccuracy`, `mistake`, `blunder`, used as `text-blunder`, `bg-blunder/10`, etc.
-  - Board: `board-light`, `board-dark`.
+  - Board: `board-light`, `board-dark` (wood tones). `ink` is a raised surface for selected states.
   - Keep classification colors distinct from the brand color.
 - **Stockfish asset:**
   - `scripts/copy-stockfish.mjs` (postinstall) copies `stockfish-19-lite-single.{js,wasm}` and `COPYING.txt` to `public/stockfish/`, which is gitignored and ESLint-ignored.
@@ -321,7 +322,7 @@ The spec's "wrong move = Again" was read as a failed attempt, since a retry is a
 - One measure per chart, as small multiples, never two y-axes.
 - Single series, so no legend; the latest value is labelled in the title row.
 - 2px linear line over a 10% wash, dots for isolated or latest weeks, a solid hairline grid, a crosshair tooltip, and a "Show as a table" view.
-- **Series color** is a new `--chart-series` token (`oklch(0.66 0.15 285)`). It's the brand violet stepped into the dark-surface lightness band. The validator's lightness check failed the 0.72 version; this one passes every check on `--card`.
+- **Series color** is a new `--chart-series` token (`oklch(0.66 0.15 285)`). It is now the brand blue `oklch(0.7 0.14 252)` (redesign, November 2026).
 - Breakdown tables carry inline bars on one scale, so each table is its own accessible view.
 
 **Page** (`/progress`): one filter row (date range 4w / 12w / all, speed, account) scopes everything. Stat tiles show change against the previous equal-length period, with an arrow and a good/bad color. Puzzle stats aren't filtered by speed.
@@ -343,7 +344,7 @@ The spec's "wrong move = Again" was read as a failed attempt, since a retry is a
 - `components/layout/StorageWarning.tsx`: a banner if IndexedDB can't open, as in some private modes.
 
 **Branding and metadata:**
-- `app/icon.svg` is the Lucide knight on violet; the default `favicon.ico` was removed.
+- `app/icon.svg` is the Lucide knight on the brand blue; the default `favicon.ico` was removed.
 - `app/opengraph-image.tsx` uses ImageResponse. Satori shrinks flex items, so chips need `display: flex` and `flexShrink: 0`.
 - `metadataBase` comes from `VERCEL_PROJECT_PRODUCTION_URL`, falling back to localhost.
 

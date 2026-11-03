@@ -19,7 +19,7 @@ export function EvalBar({ evaluation, orientation }: { evaluation: Eval | undefi
       aria-label={evaluation ? `Evaluation ${formatEval(evaluation)}` : "Evaluation pending"}
     >
       <div
-        className="absolute inset-x-0 bg-neutral-100 transition-[height] duration-300"
+        className="absolute inset-x-0 rounded-xl bg-card transition-[height] duration-300"
         style={{ height: `${white}%`, [orientation === "white" ? "bottom" : "top"]: 0 }}
       />
       {label && (
