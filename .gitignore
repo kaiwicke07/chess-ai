@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Stockfish engine, copied from node_modules on install
 /public/stockfish/
+
+# Vercel CLI project link
+.vercel
