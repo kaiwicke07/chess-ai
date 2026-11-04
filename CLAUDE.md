@@ -400,3 +400,10 @@ The spec's "wrong move = Again" was read as a failed attempt, since a retry is a
 - The name "chess.ai" is a placeholder (it no longer uses AI). It's defined only in `lib/site.ts`.
 - Opening names differ by platform: Lichess gives "Sicilian Defense: Najdorf Variation", Chess.com's slug "Sicilian Defense Canal Attack". Normalize them (for example by ECO) before grouping in Phase 9.
 - `components/ui/tabs.tsx` is installed but unused so far.
+
+### Quick wins (after the redesign, November 2026)
+
+- **Streak and daily goal:** `lib/srs/streak.ts` (`practiceStreak`) counts consecutive local days with any review-log entry, stepping by calendar date (DST-safe). A streak that ended yesterday still shows, dimmed, until midnight. Shown in the header (`StreakBadge`, hidden below `sm` for room) and on `/puzzles` (`DailyGoal`: distinct puzzles tried today out of tried + still queued).
+- **Sounds:** `lib/sound.ts` synthesizes every sound with Web Audio (no files to ship or license). `InteractiveBoard` plays one on every FEN change (except its first position); the review plays one when stepping forward a single move. Mute toggle in the header (`SoundToggle`), stored in localStorage under `chess.ai:sound`.
+- **Shortcuts:** `lib/useHotkeys.ts`. Puzzles and opening drills: H hint, S show solution/answer, N next. Button hints use `components/ui/kbd.tsx` (hidden on phones). The review keeps its own arrow/F handler.
+- **Share:** `components/review/ShareMenu.tsx` (Base UI Menu) on the review header. Our review URLs only work in the browser that has the game, so the shareable link is Lichess's analysis board (`lichessAnalysisUrl` in `lib/chess/share.ts`). Also copies FEN and a full PGN (`gameToPgn`).

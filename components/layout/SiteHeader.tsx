@@ -4,6 +4,8 @@ import { ChessKnight } from "lucide-react"
 
 import { NavLink, PlainNavLink } from "@/components/layout/NavLink"
 import { PuzzlesDueBadge } from "@/components/layout/PuzzlesDueBadge"
+import { SoundToggle } from "@/components/layout/SoundToggle"
+import { StreakBadge } from "@/components/layout/StreakBadge"
 import { site } from "@/lib/site"
 
 type LinkComponent = ComponentType<{ href: string; children: ReactNode }>
@@ -38,12 +40,17 @@ export function SiteHeader() {
           {/* On phones the knight alone leaves room for the three links */}
           <span className="hidden text-[1.05rem] tracking-tight sm:inline">{site.name}</span>
         </Link>
-        <nav aria-label="Main" className="flex items-center gap-0.5 sm:gap-1">
-          {/* The active highlight needs the path (request-time data), so it streams in */}
-          <Suspense fallback={<MainLinks Link={PlainNavLink} />}>
-            <MainLinks Link={NavLink} />
-          </Suspense>
-        </nav>
+        <div className="flex items-center gap-0.5 sm:gap-2">
+          <nav aria-label="Main" className="flex items-center gap-0.5 sm:gap-1">
+            {/* The active highlight needs the path (request-time data), so it streams in */}
+            <Suspense fallback={<MainLinks Link={PlainNavLink} />}>
+              <MainLinks Link={NavLink} />
+            </Suspense>
+          </nav>
+          {/* Client components: the streak reads IndexedDB, the toggle localStorage */}
+          <StreakBadge />
+          <SoundToggle />
+        </div>
       </div>
     </header>
   )

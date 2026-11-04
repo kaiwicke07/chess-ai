@@ -10,6 +10,7 @@ import { InteractiveBoard } from "@/components/board/InteractiveBoard"
 import { JUDGEMENT_TEXT } from "@/components/review/judgementStyles"
 import { Badge } from "@/components/ui/badge"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { Kbd } from "@/components/ui/kbd"
 import { JUDGEMENT_GLYPHS, JUDGEMENT_LABELS } from "@/lib/analysis/classify"
 import {
   advance,
@@ -22,9 +23,11 @@ import {
   type SolveState,
 } from "@/lib/puzzles/solve"
 import { THEME_LABELS } from "@/lib/puzzles/themes"
+import { playSound } from "@/lib/sound"
 import { GRADE_LABELS } from "@/lib/srs/grading"
 import { formatInterval } from "@/lib/srs/scheduler"
 import type { Game, Puzzle } from "@/lib/types"
+import { useHotkeys } from "@/lib/useHotkeys"
 
 const OUTCOME_TEXT: Record<SolveOutcome, string> = {
   clean: "Solved!",
@@ -87,6 +90,7 @@ export function PuzzleSolver({
     setState(result.state)
     if (!result.played) {
       setWrong(true)
+      playSound("wrong")
       return false
     }
     setWrong(false)
@@ -96,7 +100,11 @@ export function PuzzleSolver({
       setFinalFen(chess.fen())
     }
     const finished = outcomeOf(result.state)
-    if (finished) onFinished(finished, elapsed())
+    if (finished) {
+      // After the move's own sound, so the two don't blur together
+      setTimeout(() => playSound("correct"), 180)
+      onFinished(finished, elapsed())
+    }
     return true
   }
 
@@ -106,6 +114,14 @@ export function PuzzleSolver({
     setWrong(false)
     onFinished("failed", elapsed())
   }
+
+  const canHint = !outcome && userToMove && !state.hintUsed
+  const hint = () => setState((s) => ({ ...s, hintUsed: true }))
+  useHotkeys({
+    h: canHint ? hint : null,
+    s: outcome ? null : showSolution,
+    n: outcome && onNext ? onNext : null,
+  })
 
   // The move that led to the shown position: the opponent's game move at first
   const last =
@@ -153,15 +169,11 @@ export function PuzzleSolver({
 
         {!outcome && (
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setState((s) => ({ ...s, hintUsed: true }))}
-              disabled={state.hintUsed || !userToMove}
-            >
-              <Lightbulb aria-hidden /> Hint
+            <Button variant="outline" onClick={hint} disabled={!canHint} aria-keyshortcuts="H">
+              <Lightbulb aria-hidden /> Hint <Kbd>H</Kbd>
             </Button>
-            <Button variant="ghost" onClick={showSolution}>
-              <Eye aria-hidden /> Show solution
+            <Button variant="ghost" onClick={showSolution} aria-keyshortcuts="S">
+              <Eye aria-hidden /> Show solution <Kbd>S</Kbd>
             </Button>
           </div>
         )}
@@ -212,8 +224,8 @@ export function PuzzleSolver({
             </p>
             <div className="flex flex-wrap gap-2">
               {onNext && (
-                <Button onClick={onNext}>
-                  Next puzzle <ArrowRight aria-hidden />
+                <Button onClick={onNext} aria-keyshortcuts="N">
+                  Next puzzle <ArrowRight aria-hidden /> <Kbd>N</Kbd>
                 </Button>
               )}
               <Link

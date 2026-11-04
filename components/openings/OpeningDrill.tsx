@@ -7,13 +7,16 @@ import type { Grade } from "ts-fsrs"
 
 import { InteractiveBoard } from "@/components/board/InteractiveBoard"
 import { Button } from "@/components/ui/button"
+import { Kbd } from "@/components/ui/kbd"
 import { numberMoves } from "@/lib/chess/san"
 import { analysisQueue } from "@/lib/engine/queue"
 import type { WeakSpot } from "@/lib/openings/deviations"
 import { knownVerdict, verdictFromEval } from "@/lib/openings/drill"
+import { playSound } from "@/lib/sound"
 import { GRADE_LABELS } from "@/lib/srs/grading"
 import { formatInterval } from "@/lib/srs/scheduler"
 import type { SolveOutcome } from "@/lib/types"
+import { useHotkeys } from "@/lib/useHotkeys"
 
 const REPLAY_MS = 350
 
@@ -88,6 +91,7 @@ export function OpeningDrill({
   }, [phase, replayed, path.length])
 
   function finish(result: SolveOutcome) {
+    if (result !== "failed") setTimeout(() => playSound("correct"), 180)
     setOutcome(result)
     setPhase("done")
     onFinished(result, Date.now() - startedAt.current)
@@ -100,6 +104,7 @@ export function OpeningDrill({
     } else {
       setShown(null)
       setMistakes((m) => m + 1)
+      playSound("wrong")
       setWrong(after.san)
       setPhase("playing")
     }
@@ -131,6 +136,13 @@ export function OpeningDrill({
     setShown({ uci: spot.best.uci, ...play(spot.node.fen, spot.best.uci) })
     finish("failed")
   }
+
+  const canHint = !outcome && phase === "playing" && !hintUsed
+  useHotkeys({
+    h: canHint ? () => setHintUsed(true) : null,
+    s: !outcome && phase === "playing" ? showAnswer : null,
+    n: outcome && onNext ? onNext : null,
+  })
 
   const fen = shown ? shown.fen : phase === "replay" ? lineFens[replayed] : spot.node.fen
   const lastUci = shown?.uci ?? (phase === "replay" ? path[replayed - 1] : path.at(-1))
@@ -175,11 +187,11 @@ export function OpeningDrill({
 
         {!outcome && phase !== "replay" && (
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => setHintUsed(true)} disabled={hintUsed || phase !== "playing"}>
-              <Lightbulb aria-hidden /> Hint
+            <Button variant="outline" onClick={() => setHintUsed(true)} disabled={!canHint} aria-keyshortcuts="H">
+              <Lightbulb aria-hidden /> Hint <Kbd>H</Kbd>
             </Button>
-            <Button variant="ghost" onClick={showAnswer} disabled={phase === "checking"}>
-              <Eye aria-hidden /> Show answer
+            <Button variant="ghost" onClick={showAnswer} disabled={phase === "checking"} aria-keyshortcuts="S">
+              <Eye aria-hidden /> Show answer <Kbd>S</Kbd>
             </Button>
           </div>
         )}
@@ -214,8 +226,8 @@ export function OpeningDrill({
               <span className="font-mono">{spot.line.join(" ")}</span>
             </p>
             {onNext && (
-              <Button className="w-fit" onClick={onNext}>
-                Next drill <ArrowRight aria-hidden />
+              <Button className="w-fit" onClick={onNext} aria-keyshortcuts="N">
+                Next drill <ArrowRight aria-hidden /> <Kbd>N</Kbd>
               </Button>
             )}
           </div>

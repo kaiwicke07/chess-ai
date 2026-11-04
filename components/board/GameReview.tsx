@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useLiveQuery } from "dexie-react-hooks"
 import { ArrowLeft, ExternalLink, Play, Swords } from "lucide-react"
@@ -16,6 +16,7 @@ import { ReviewBoard } from "@/components/board/ReviewBoard"
 import { AccuracySummary } from "@/components/review/AccuracySummary"
 import { BEST_COLOR, JUDGEMENT_COLORS } from "@/components/review/judgementStyles"
 import { MoveFeedback } from "@/components/review/MoveFeedback"
+import { ShareMenu } from "@/components/review/ShareMenu"
 import { buttonVariants } from "@/components/ui/button"
 import { gameAccuracy } from "@/lib/analysis/accuracy"
 import { assessMoves } from "@/lib/analysis/classify"
@@ -25,6 +26,7 @@ import { db } from "@/lib/db/schema"
 import { useAnalysisQueue } from "@/lib/engine/useAnalysisQueue"
 import { useGameEvals } from "@/lib/engine/useGameEvals"
 import { formatOutcome, formatScore, formatTimeControl, SPEED_LABELS } from "@/lib/format"
+import { playSound, soundForSan } from "@/lib/sound"
 import { PLATFORM_LABELS } from "@/lib/sources/normalize"
 import type { Color, Game } from "@/lib/types"
 
@@ -98,6 +100,14 @@ function Review({ game }: { game: Game }) {
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [lastPly])
 
+  // Stepping forward one move plays its sound; jumps and steps back stay quiet
+  const shownPly = useRef(ply)
+  useEffect(() => {
+    const san = positions[ply].lastMove?.san
+    if (ply === shownPly.current + 1 && san) playSound(soundForSan(san))
+    shownPly.current = ply
+  }, [ply, positions])
+
   // The move that led to the shown position, its verdict, and arrows for it:
   // what was played (in the judgement's color) and what Stockfish preferred
   const move = positions[ply].lastMove
@@ -149,7 +159,7 @@ function Review({ game }: { game: Game }) {
           </div>
         </div>
         {/* Replay against Stockfish: from the shown move, or from where the game turned */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {game.result !== "win" && (
             <Link href={`/play/${game.platform}/${game.sourceId}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
               <Swords aria-hidden /> Replay the turning point
@@ -163,6 +173,7 @@ function Review({ game }: { game: Game }) {
               <Play aria-hidden /> Play from here
             </Link>
           )}
+          <ShareMenu game={game} fen={positions[ply].fen} orientation={orientation} />
         </div>
       </header>
 

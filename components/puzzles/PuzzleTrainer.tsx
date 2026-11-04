@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { useLiveQuery } from "dexie-react-hooks"
-import { CalendarCheck, CircleCheck, CircleX, Cpu, Puzzle as PuzzleIcon } from "lucide-react"
+import { CalendarCheck, CircleCheck, CircleX, Cpu, Flame, Puzzle as PuzzleIcon } from "lucide-react"
 
 import { RecentAccounts } from "@/components/games/RecentAccounts"
+import { useStreak } from "@/components/layout/StreakBadge"
 import { PuzzleSolver } from "@/components/puzzles/PuzzleSolver"
 import { Button } from "@/components/ui/button"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
@@ -48,7 +49,9 @@ export function PuzzleTrainer() {
       .map((puzzle) => ({ puzzle, game: byId.get(puzzle.gameId) }))
       .sort((a, b) => (b.game?.playedAt ?? 0) - (a.game?.playedAt ?? 0) || a.puzzle.ply - b.puzzle.ply)
     const cards = await db.cards.where("kind").equals("puzzle").toArray()
-    const reviewedToday = await db.reviews.where("reviewedAt").aboveOrEqual(startOfDay(Date.now())).count()
+    // Distinct puzzles tried today, so a missed one that comes back doesn't count twice
+    const today = await db.reviews.where("reviewedAt").aboveOrEqual(startOfDay(Date.now())).toArray()
+    const reviewedToday = new Set(today.filter((r) => r.kind === "puzzle").map((r) => r.refId)).size
     return { entries, cards: new Map(cards.map((c) => [c.refId, c])), reviewedToday }
   })
   const now = useNow(30_000)
@@ -105,12 +108,10 @@ export function PuzzleTrainer() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-3">
           <h1 className="page-title">Puzzles</h1>
+          <DailyGoal done={reviewedToday} left={queueIds.length} />
           <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">
-              <span className="font-mono tabular-nums">{queue.due.length}</span> due
-            </span>{" "}
-            · <span className="font-mono tabular-nums">{queue.fresh.length}</span> new left today ·{" "}
-            <span className="font-mono tabular-nums">{reviewedToday}</span> done today ·{" "}
+            <span className="font-mono tabular-nums">{queue.due.length}</span> due ·{" "}
+            <span className="font-mono tabular-nums">{queue.fresh.length}</span> new left today ·{" "}
             <span className="font-mono tabular-nums">{entries.length}</span> in total
           </p>
         </div>
@@ -194,6 +195,47 @@ export function PuzzleTrainer() {
             onSelect={select}
           />
         </section>
+      )}
+    </div>
+  )
+}
+
+/** Today's progress through the queue, and the streak it keeps alive. */
+function DailyGoal({ done, left }: { done: number; left: number }) {
+  const streak = useStreak()
+  const goal = done + left
+  const finished = goal > 0 && left === 0
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      {goal > 0 && (
+        <div className="flex items-center gap-3">
+          <div
+            className="h-2 w-40 overflow-hidden rounded-full bg-muted sm:w-52"
+            role="progressbar"
+            aria-label="Today's puzzles"
+            aria-valuemin={0}
+            aria-valuemax={goal}
+            aria-valuenow={done}
+          >
+            <div
+              className={`h-full rounded-full transition-[width] duration-300 ease-out motion-reduce:transition-none ${finished ? "bg-best" : "bg-primary"}`}
+              style={{ width: `${(done / goal) * 100}%` }}
+            />
+          </div>
+          <span className="text-sm font-semibold">
+            <span className="font-mono tabular-nums">{done}</span> of{" "}
+            <span className="font-mono tabular-nums">{goal}</span> done today
+          </span>
+        </div>
+      )}
+      {streak && streak.days > 0 && (
+        <span className={`flex items-center gap-1 text-sm font-semibold ${streak.today ? "text-mistake" : "text-muted-foreground"}`}>
+          <Flame className="size-4" aria-hidden />
+          <span>
+            <span className="font-mono tabular-nums">{streak.days}</span>-day streak
+            {!streak.today && <span className="font-normal">, solve one today to keep it</span>}
+          </span>
+        </span>
       )}
     </div>
   )

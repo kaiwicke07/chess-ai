@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Chess, type Square } from "chess.js"
 import { Chessboard } from "react-chessboard"
 
+import { playSound, soundForPositions } from "@/lib/sound"
 import type { Color } from "@/lib/types"
 
 const HIGHLIGHT = { backgroundColor: "color-mix(in oklch, var(--primary) 35%, transparent)" }
@@ -35,6 +36,17 @@ export function InteractiveBoard({
 }) {
   const [selected, setSelected] = useState<string | null>(null)
   const side = color === "white" ? "w" : "b"
+
+  // Every position change on this board makes a move sound: the user's moves,
+  // replies, replayed lines and revealed solutions alike. The first position
+  // (a new puzzle or drill appearing) is silent.
+  const previousFen = useRef(fen)
+  useEffect(() => {
+    if (previousFen.current === fen) return
+    const chess = new Chess(fen)
+    playSound(soundForPositions(previousFen.current, fen, chess.inCheck(), chess.isCheckmate()))
+    previousFen.current = fen
+  }, [fen])
 
   function tryMove(from: string, to: string): boolean {
     if (!canMove) return false
