@@ -7,7 +7,7 @@ import type { ReactNode } from "react"
 import { cn } from "@/lib/utils"
 
 const BASE =
-  "flex items-center rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:px-3"
+  "flex items-center rounded-lg px-2 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:px-3"
 const IDLE = "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
 
 /** Header link with no active state, for the static shell before the path is known. */

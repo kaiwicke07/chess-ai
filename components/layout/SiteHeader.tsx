@@ -10,10 +10,11 @@ import { site } from "@/lib/site"
 
 type LinkComponent = ComponentType<{ href: string; children: ReactNode }>
 
-/** The three section links, drawn with either link component. */
+/** The section links, drawn with either link component. */
 function MainLinks({ Link: Item }: { Link: LinkComponent }) {
   return (
     <>
+      <Item href="/play">Play</Item>
       <Item href="/puzzles">
         Puzzles
         {/* Client component: reads the schedule from IndexedDB */}

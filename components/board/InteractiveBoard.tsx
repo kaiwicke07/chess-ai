@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Chess, type Square } from "chess.js"
-import { Chessboard } from "react-chessboard"
+import { Chessboard, type Arrow } from "react-chessboard"
 
 import { playSound, soundForPositions } from "@/lib/sound"
 import type { Color } from "@/lib/types"
@@ -25,6 +25,7 @@ export function InteractiveBoard({
   onMove,
   lastMove,
   hintSquare,
+  arrows = [],
 }: {
   id: string
   fen: string
@@ -33,6 +34,8 @@ export function InteractiveBoard({
   onMove: (uci: string) => boolean
   lastMove: { from: string; to: string } | null
   hintSquare?: string | null
+  /** Coaching arrows (a refutation, the best move) */
+  arrows?: Arrow[]
 }) {
   const [selected, setSelected] = useState<string | null>(null)
   const side = color === "white" ? "w" : "b"
@@ -83,6 +86,7 @@ export function InteractiveBoard({
           onSquareClick: ({ square }) => onSquareClick(square),
           animationDurationInMs: 200,
           squareStyles,
+          arrows,
           darkSquareStyle: { backgroundColor: "var(--board-dark)" },
           lightSquareStyle: { backgroundColor: "var(--board-light)" },
           darkSquareNotationStyle: { color: "var(--board-light)" },
