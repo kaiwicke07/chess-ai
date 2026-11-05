@@ -16,7 +16,7 @@ A portfolio project for the owner's personal website. It imports the user's Lich
 
 - **Build one phase at a time.** Finish, verify, and stop; don't start the next phase until asked.
 - **Explain the key decisions**, so the owner understands the code. At the end of each phase, summarize what was built, how it works (a file table), and the decisions worth understanding.
-- **Commit only when asked.** Messages follow the existing style: an imperative subject, a "Phase N: ..." body with bullets, and the attribution trailer. On Windows PowerShell 5.1, a commit message containing double quotes breaks `git commit -m`, so write it to a temp file and use `git commit -F <file>`.
+- **Commit only when asked.** Messages follow the existing style: an imperative subject, and a "Phase N: ..." body with bullets. No Claude co-author line. On Windows PowerShell 5.1, a commit message containing double quotes breaks `git commit -m`, so write it to a temp file and use `git commit -F <file>`.
 - **Verify each phase:** `npx tsc --noEmit`, `npm run lint`, `npm test` and `npm run build`, plus a real check in the browser. Run `npx next typegen` after adding routes so `PageProps<...>` types exist.
 - **Match the surrounding code:** short JSDoc on exported functions, comments that explain *why*, no semicolons in app code, Tailwind classes, and shadcn components from `components/ui`.
 
